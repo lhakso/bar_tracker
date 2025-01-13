@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+
+bar_tracker_venv/
+
+.env
+
+db.sqlite3
+
+.DS_Store
+
+Celery@Macbook-Air.local:

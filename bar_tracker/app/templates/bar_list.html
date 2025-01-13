@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Bars in Charlottesville{% endblock %}
+
+{% block content %}
+<div class="bar-container">
+    {% for bar in bars %}
+    <div class="bar-tile">
+        <a href="{% url 'bar_detail' bar.id %}" class="tile-link"></a>
+        <h2>{{ bar.name }}</h2>
+        <p>Current Occupancy:
+            {% if bar.displayed_current_occupancy%}
+            {{ bar.displayed_current_occupancy }}
+            {% else %}
+            No reports yet
+            {% endif %}
+        </p>
+        <p>Line Wait:
+            {% if bar.displayed_current_line %}
+            {{ bar.displayed_current_line }}
+            {% else %}
+            No reports yet
+            {% endif %}
+        </p>
+        <button class="report-button" onclick="toggleForm(this)">Report</button>
+        <!-- Hidden Occupancy Form -->
+        <div class="occupancy-form hidden">
+            <button class="close-button" onclick="toggleForm(this)">Close</button>
+            <h3>Report Occupancy</h3>
+            <form method="post" action="{% url 'submit_occupancy' %}">
+                {% csrf_token %}
+                <input type="hidden" name="bar_id" value="{{ bar.id }}">
+                <div class="form-group">
+                    <label for="occupancy-level-{{ bar.id }}">Occupancy Level:</label>
+                    <input type="number" id="occupancy-level-{{ bar.id }}" name="occupancy_level" min="1" max="10"
+                        required>
+                </div>
+                <div class="form-group">
+                    <label for="line-wait-{{ bar.id }}">Line Wait:</label>
+                    <input type="number" id="line-wait-{{ bar.id }}" name="line_wait" min="1" max="10" required>
+                </div>
+                <button type="submit" class="submit-button">Submit</button>
+            </form>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

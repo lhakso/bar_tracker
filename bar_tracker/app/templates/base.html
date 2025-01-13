@@ -1,0 +1,31 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Bar Tracker{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'app.css' %}">
+</head>
+
+<body>
+    <header class="main-header">
+        <div class="logo-container">
+            <a href="{% url 'bar_list' %}">
+                <img src="{% static 'images/logo.png' %}" alt="Bar Tracker Logo" class="logo-img">
+            </a>
+            <a href="{% url 'bar_list' %}" class="menu-title">Bar Tracker</a>
+        </div>
+    </header>
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    <footer>
+        <p>&copy; 2024 Bar Tracker</p>
+    </footer>
+    {% block scripts %}
+    <script src="{% static 'app.js' %}"></script>
+    {% endblock %}
+</body>
+
+</html>

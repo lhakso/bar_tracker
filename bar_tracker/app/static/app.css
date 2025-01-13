@@ -1,0 +1,284 @@
+.bar-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+    width: 100%;
+}
+
+.bar-tile {
+    width: 90%;
+    height: 200px;
+
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    background-color: #f9f9f9;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+h2 {
+    margin: 0;
+    font-size: 1.5em;
+}
+
+.details-link {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 1em;
+    margin-top: 10px;
+    display: inline-block;
+}
+
+.report-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+}
+
+.report-button:hover {
+    background-color: #0056b3;
+}
+
+.tile-link {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 20px;
+    /* Match .bar-tile padding */
+    text-decoration: none;
+    color: inherit;
+    z-index: 0;
+    /* Ensure it stays below the button */
+}
+
+.tile-link h2,
+.tile-link p {
+    position: relative;
+    z-index: 1;
+    /* Lift above the link's background */
+}
+
+.report-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    z-index: 2;
+}
+
+.report-button:hover {
+    background-color: #0056b3;
+}
+
+.occupancy-form {
+    position: absolute;
+    top: 0;
+    /* Align with the top of the bar-tile */
+    right: 0;
+    /* Align to the right edge of the bar-tile */
+    width: 35%;
+    height: 90%;
+    background-color: white;
+    z-index: 3;
+    border: 1px solid #ddd;
+    border-radius: 0 10px 10px 0;
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    /* Align content to the top */
+    align-items: center;
+}
+
+.form-group {
+    width: 100%;
+    /* Ensure the group spans the full form width */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    /* Center the inputs horizontally */
+    margin-bottom: 15px;
+    /* Add spacing between form groups */
+}
+
+.form-group label {
+    text-align: center;
+    /* Center-align the label */
+    margin-bottom: 5px;
+    /* Space below the label */
+    font-weight: bold;
+    /* Optional: Emphasize labels */
+}
+
+.form-group input {
+    width: 80%;
+    /* Set input width relative to the form group */
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    /* Ensure padding doesn't affect total width */
+}
+
+/* Header container for close button and title */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    /* Align "Close" and title on the same row */
+    align-items: center;
+    width: 100%;
+    /* Ensure it spans the full width */
+    margin-bottom: 10px;
+    /* Add spacing below the header */
+}
+
+/* Title styling */
+.occupancy-form h3 {
+    margin-top: 1%;
+    margin-bottom: 4%;
+    font-size: 1.2em;
+    /* Adjust font size */
+    text-align: center;
+}
+
+/* Close button styling */
+.close-button {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 0.9em;
+    margin: 0;
+    /* Remove default margins */
+}
+
+/* Hidden form state */
+.occupancy-form.hidden {
+    display: none;
+}
+
+/* Input fields styling */
+.occupancy-form input {
+    width: 80%;
+    /* Adjust input width */
+    padding: 8px;
+    margin: 10px 0;
+    /* Space between inputs */
+    margin-left: 20%;
+}
+
+/* Submit button styling */
+.submit-button {
+    position: absolute;
+    margin-top: 3%;
+    background-color: #007bff;
+    width: 49%;
+    color: rgb(255, 255, 255);
+    border-radius: 5px;
+    padding: 5px 10px;
+    border: none;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.close-button {
+    position: absolute;
+    /* Allow placement within the form */
+    top: 10px;
+    /* Space from the top of the hidden menu */
+    left: 10px;
+    /* Space from the left of the hidden menu */
+    background-color: #007bff;
+    color: rgb(255, 255, 255);
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+    font-size: 0.9em;
+}
+
+.submit-button:hover,
+.close-button:hover {
+    background-color: #0056b3;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+}
+
+/* Main Header Styling */
+.main-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 20px;
+    background-color: #D3D3D3;
+    border-bottom: 1px solid #ddd;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* Logo and Title Container */
+.logo-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    /* Space between the logo and the text */
+}
+
+/* Logo Styling */
+.logo-img {
+    height: 40px;
+    width: auto;
+    display: block;
+}
+
+/* Menu Title Styling */
+.menu-title {
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-decoration: none;
+    /* Remove underline */
+    color: #333;
+    /* Dark text color */
+    padding: 5px 10px;
+    border: 1px solid transparent;
+    /* Invisible border for consistent spacing */
+    border-radius: 5px;
+    transition: background-color 0.3s, color 0.3s;
+    /* Smooth hover effect */
+}
+
+/* Hover Effect for Menu Title */
+.menu-title:hover {
+    background-color: #007bff;
+    color: #fff;
+    border: 1px solid #007bff;
+}
+
+
+footer {
+    text-align: left;
+    padding-left: 20px;
+}
