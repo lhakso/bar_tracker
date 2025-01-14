@@ -1,5 +1,5 @@
 from django.test import TestCase
-from app.apis import update_location
+from app.apis.views import update_location
 from django.urls import reverse
 from app.models import Bar, OccupancyReport, UserProfile
 from django.contrib.auth.models import User

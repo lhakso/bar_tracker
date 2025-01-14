@@ -87,7 +87,7 @@ def update_location(request):
                 return JsonResponse(
                     {"success": False, "message": "Missing location data."}, status=400
                 )
-
+            profile, created = UserProfile.objects.get_or_create(user=user)
             # Update user's location in UserProfile
             if profile.latitude != float(latitude) or profile.longitude != float(
                 longitude
