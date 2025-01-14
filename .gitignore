@@ -9,4 +9,6 @@ bar_tracker/db.sqlite3
 
 bar_tracker/.DS_Store
 
+bar_tracker/app/.DS_Store
+
 bar_tracker/Celery@Macbook-Air.local:
