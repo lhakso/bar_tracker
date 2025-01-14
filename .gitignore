@@ -3,10 +3,10 @@ __pycache__/
 
 bar_tracker_venv/
 
-.env
+bar_tracker/.env
 
-db.sqlite3
+bar_tracker/db.sqlite3
 
-.DS_Store
+bar_tracker/.DS_Store
 
-Celery@Macbook-Air.local:
+bar_tracker/Celery@Macbook-Air.local:
