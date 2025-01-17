@@ -2,6 +2,7 @@ from django.shortcuts import get_object_or_404
 from app.models import Bar, OccupancyReport, UserProfile
 from django.http import JsonResponse
 from django.utils.timezone import now
+from django.views.decorators.csrf import csrf_exempt
 from app.utils import (
     flag_fraudulent_entries,
     handle_user_strikes,
@@ -14,6 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+@csrf_exempt
 def get_bars(request):
     """Retrieve a list of all active bars."""
     bars = Bar.objects.filter(is_active=True)
@@ -33,6 +35,7 @@ def get_bars(request):
     return JsonResponse(bar_data, safe=False)
 
 
+@csrf_exempt
 def submit_occupancy(request):
     if request.method == "POST":
         try:
