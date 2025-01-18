@@ -52,7 +52,7 @@ class BarListViewModel: ObservableObject {
             "occupancy_level": occupancy,
             "line_wait": lineWait
         ]
-
+        
         do {
             request.httpBody = try JSONSerialization.data(withJSONObject: body)
         } catch {
