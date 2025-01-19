@@ -2,6 +2,14 @@ from django.shortcuts import get_object_or_404
 from app.models import Bar, OccupancyReport, UserProfile
 from django.http import JsonResponse
 from django.utils.timezone import now
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
 from django.views.decorators.csrf import csrf_exempt
 from app.utils import (
     flag_fraudulent_entries,
@@ -15,7 +23,43 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-@csrf_exempt
+@api_view(["POST"])
+@permission_classes([AllowAny])  # Allow access without authentication
+def register_user(request):
+    """
+    Public endpoint for user registration.
+    """
+    username = request.data.get("username")
+    password = request.data.get("password")
+    email = request.data.get("email", "")
+
+    # Validate inputs
+    if not username or not password:
+        return Response(
+            {"error": "Username and password are required."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if User.objects.filter(username=username).exists():
+        return Response(
+            {"error": "A user with this username already exists."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # Create the user
+    user = User.objects.create(
+        username=username,
+        email=email,
+        password=make_password(password),  # Hash the password
+    )
+    user.save()
+
+    return Response(
+        {"success": True, "message": "User registered successfully."},
+        status=status.HTTP_201_CREATED,
+    )
+
+
 def get_bars(request):
     """Retrieve a list of all active bars."""
     bars = Bar.objects.filter(is_active=True)
@@ -35,48 +79,76 @@ def get_bars(request):
     return JsonResponse(bar_data, safe=False)
 
 
-@csrf_exempt
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def submit_occupancy(request):
-    if request.method == "POST":
-        try:
-            bar_id = request.POST.get("bar_id")
-            occupancy_level = request.POST.get("occupancy_level")
-            line_wait = request.POST.get("line_wait")
-            bar = get_object_or_404(Bar, id=bar_id)
-            user = request.user
-            if not verify_cooldown(user, bar):
-                return JsonResponse(
-                    {
-                        "success": False,
-                        "message": "You can only submit a report every 10 minutes for the same bar.",
-                    },
-                    status=400,
-                )
-            # Create a new OccupancyReport
-            report = OccupancyReport.objects.create(
-                bar=bar,
-                user=user,
-                occupancy_level=int(occupancy_level) if occupancy_level else None,
-                line_wait=int(line_wait) if line_wait else None,
-            )
-            # Calculate new displayed values using utils.py logic
-            displayed_occupancy, displayed_line = calculate_displayed_values(bar)
-            bar.displayed_current_occupancy = displayed_occupancy
-            bar.displayed_current_line = displayed_line
+    """
+    DRF-based version of your submit_occupancy endpoint.
+    Expects JSON with bar_id, occupancy_level, and line_wait.
+    """
+    try:
+        # 1) Extract data from request.data
+        bar_id = request.data.get("bar_id")
+        occupancy_level = request.data.get("occupancy_level")
+        line_wait = request.data.get("line_wait")
 
-            if flag_fraudulent_entries(report, displayed_occupancy, displayed_line):
-                handle_user_strikes(user)
-            bar.save()
-
-            return JsonResponse(
-                {"success": True, "message": "Report submitted successfully."}
+        if not bar_id:
+            return Response(
+                {"success": False, "error": "bar_id is required."},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
-        except Exception as e:
-            logger.error(f"Error in submit_occupancy: {e}")
-            return JsonResponse({"success": False, "error": str(e)}, status=500)
+        # 2) Fetch the bar using the provided ID
+        bar = get_object_or_404(Bar, id=bar_id)
 
-    return JsonResponse({"success": False, "error": "Invalid request"}, status=405)
+        # 3) Get the user from request (assuming session or token auth)
+        user = request.user
+        if not user.is_authenticated:
+            return Response(
+                {"success": False, "error": "User is not authenticated."},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        # 4) Check cooldown logic
+        if not verify_cooldown(user, bar):
+            return Response(
+                {
+                    "success": False,
+                    "message": "You can only submit a report every 10 minutes for the same bar.",
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # 5) Create the OccupancyReport
+        report = OccupancyReport.objects.create(
+            bar=bar,
+            user=user,
+            occupancy_level=int(occupancy_level) if occupancy_level else None,
+            line_wait=int(line_wait) if line_wait else None,
+        )
+        print(report.line_wait)
+        # 6) Recalculate displayed values
+        displayed_occupancy, displayed_line = calculate_displayed_values(bar)
+        bar.displayed_current_occupancy = displayed_occupancy
+        bar.displayed_current_line = displayed_line
+
+        # 7) Fraud check
+        if flag_fraudulent_entries(report, displayed_occupancy, displayed_line):
+            handle_user_strikes(user)
+
+        bar.save()
+
+        return Response(
+            {"success": True, "message": "Report submitted successfully."},
+            status=status.HTTP_200_OK,
+        )
+
+    except Exception as e:
+        logger.error(f"Error in submit_occupancy: {e}", exc_info=True)
+        return Response(
+            {"success": False, "error": str(e)},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
 
 def update_location(request):
