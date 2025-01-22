@@ -19,6 +19,7 @@ def calculate_displayed_values(bar: Bar) -> Tuple[int, int]:
         displayed_occupancy = round(
             sum(r.occupancy_level for r in reports) / len(reports)
         )
+
         displayed_line = round(sum(r.line_wait for r in reports) / len(reports))
     else:
         displayed_occupancy = None

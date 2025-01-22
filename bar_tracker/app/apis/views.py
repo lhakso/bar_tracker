@@ -91,7 +91,6 @@ def submit_occupancy(request):
         bar_id = request.data.get("bar_id")
         occupancy_level = request.data.get("occupancy_level")
         line_wait = request.data.get("line_wait")
-
         if not bar_id:
             return Response(
                 {"success": False, "error": "bar_id is required."},
@@ -110,23 +109,22 @@ def submit_occupancy(request):
             )
 
         # 4) Check cooldown logic
-        if not verify_cooldown(user, bar):
+        """if not verify_cooldown(user, bar):
             return Response(
                 {
                     "success": False,
                     "message": "You can only submit a report every 10 minutes for the same bar.",
                 },
                 status=status.HTTP_400_BAD_REQUEST,
-            )
+            )"""
 
         # 5) Create the OccupancyReport
         report = OccupancyReport.objects.create(
             bar=bar,
             user=user,
-            occupancy_level=int(occupancy_level) if occupancy_level else None,
-            line_wait=int(line_wait) if line_wait else None,
+            occupancy_level=int(occupancy_level) if occupancy_level else 0,
+            line_wait=int(line_wait) if line_wait else 0,
         )
-        print(report.line_wait)
         # 6) Recalculate displayed values
         displayed_occupancy, displayed_line = calculate_displayed_values(bar)
         bar.displayed_current_occupancy = displayed_occupancy
