@@ -136,6 +136,10 @@ def submit_occupancy(request):
 
         bar.save()
 
+        profile, created = UserProfile.objects.get_or_create(user=user)
+        profile.submissions += 1
+        profile.save()
+
         return Response(
             {"success": True, "message": "Report submitted successfully."},
             status=status.HTTP_200_OK,
@@ -165,7 +169,6 @@ def update_location(request):
             if profile.latitude != float(latitude) or profile.longitude != float(
                 longitude
             ):
-                profile, created = UserProfile.objects.get_or_create(user=user)
                 profile.latitude = float(latitude)
                 profile.longitude = float(longitude)
                 profile.last_updated = now()
