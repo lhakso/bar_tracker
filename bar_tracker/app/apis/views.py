@@ -5,6 +5,8 @@ from django.utils.timezone import now
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework import permissions
+from app.serializers import UpdateEmailSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -58,6 +60,25 @@ def register_user(request):
         {"success": True, "message": "User registered successfully."},
         status=status.HTTP_201_CREATED,
     )
+
+
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def get_user_email(request):
+    try:
+        # Use the authenticated user
+        user = request.user
+        # Fetch the user's profile
+        profile = UserProfile.objects.get(user=user)
+        # Check if email exists
+        if profile.email:
+            return JsonResponse({"email": profile.email}, status=200)
+        else:
+            return JsonResponse({"error": "Email not found"}, status=404)
+    except UserProfile.DoesNotExist:
+        return JsonResponse({"error": "UserProfile not found"}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
 
 
 def get_bars(request):
@@ -136,6 +157,7 @@ def submit_occupancy(request):
 
         bar.save()
 
+        # Track user submissions
         profile, created = UserProfile.objects.get_or_create(user=user)
         profile.submissions += 1
         profile.save()
@@ -151,6 +173,26 @@ def submit_occupancy(request):
             {"success": False, "error": str(e)},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+@api_view(["PATCH"])
+@permission_classes([permissions.IsAuthenticated])
+def update_user_email(request):
+    user = request.user
+
+    # Ensure the user has a profile
+    profile, created = UserProfile.objects.get_or_create(user=user)
+
+    # Use a serializer specifically for the UserProfile model
+    serializer = UpdateEmailSerializer(profile, data=request.data, partial=True)
+
+    if serializer.is_valid():
+        serializer.save()
+        return Response(
+            {"message": "Email updated successfully"}, status=status.HTTP_200_OK
+        )
+    else:
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 def update_location(request):

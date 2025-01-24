@@ -8,7 +8,15 @@ admin.site.register(OccupancyReport)
 
 @admin.register(UserProfile)
 class UserProfileAdmin(admin.ModelAdmin):
-    list_display = ("user", "latitude", "longitude", "last_updated", "strikes")
+    list_display = (
+        "user",
+        "email",
+        "latitude",
+        "longitude",
+        "last_updated",
+        "strikes",
+        "submissions",
+    )
     search_fields = ("user__username",)
 
 

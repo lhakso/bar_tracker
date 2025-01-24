@@ -42,6 +42,7 @@ class OccupancyReport(models.Model):
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
+    email = models.EmailField(unique=True, null=True, blank=True)
     submissions = models.IntegerField(default=0)
     strikes = models.IntegerField(default=0)
     latitude = models.FloatField(null=True, blank=True)
