@@ -8,27 +8,63 @@
 import SwiftUI
 
 struct BarListView: View {
-    @StateObject private var viewModel = BarListViewModel() // ViewModel to fetch bar data
-
+    @EnvironmentObject var viewModel: BarListViewModel // ViewModel to fetch bar data
+    @Binding var expandedBarId: Int?
+    @Namespace private var animationNamespace
+    
     var body: some View {
         ZStack {
             // Background color
             Color(red: 10/255, green: 10/255, blue: 60/255)
                 .ignoresSafeArea()
-
             ScrollView {
                 LazyVStack(spacing: 20) {
                     // Loop through the bars and display tiles
+
                     ForEach(viewModel.bars, id: \.id) { bar in
-                        BarTile(bar: bar, viewModel: viewModel)
+                        if bar.id != expandedBarId {
+                            createBarTile(for: bar)
+                        }
                     }
                 }
+                .zIndex(1)
+                
                 .padding()
+                
+            }
+            if expandedBarId != -1 {
+                Color(red: 10/255, green: 10/255, blue: 60/255)
+                //Color.black.opacity(0.4)
+                    .ignoresSafeArea()
+                    .contentShape(Rectangle()) // Ensure entire area is tappable
+                    .onTapGesture {
+                        // Collapse all expanded tiles
+                        withAnimation {
+                            expandedBarId = -1
+                        }
+                    }
+                    .zIndex(0.5) // Lower zIndex to be below the expanded BarTile
+            }
+            if let expandedBar = viewModel.bars.first(where: { $0.id == expandedBarId }) {
+                BarTile(
+                    bar: expandedBar,
+                    isExpanded: true,
+                    onExpand: { id in
+                        withAnimation {
+                            expandedBarId = id
+                        }
+                    },
+                    viewModel: viewModel,
+                    namespace: animationNamespace
+                )
+                .matchedGeometryEffect(id: "bar_\(expandedBar.id)", in: animationNamespace)
+                .zIndex(1) // Ensure expanded BarTile is above the overlay
+                .padding(.top, -275)
             }
         }
+
         .onAppear {
             // Fetch data when the view appears
-            print("onAppear triggered in BarListView")
             viewModel.fetchBars()
         }
         .toolbar {
@@ -38,6 +74,22 @@ struct BarListView: View {
                     .foregroundColor(.white)
             }
         }
+    }
+    private func createBarTile(for bar: Bar) -> some View {
+        
+        BarTile(
+            bar: bar,
+            isExpanded: expandedBarId == bar.id, // Determine if this tile is expanded
+            onExpand: { id in
+                withAnimation {
+                    expandedBarId = id // Expand or collapse based on the passed ID
+                }
+            
+            },
+            viewModel: viewModel,
+            namespace: animationNamespace
+        )
+        .matchedGeometryEffect(id: "bar_\(bar.id)", in: animationNamespace)
     }
 }
 
@@ -50,7 +102,10 @@ struct BarListView_Previews: PreviewProvider {
             Bar(id: 2, name: "Mock Bar 2", currentOccupancy: 50, currentLineWait: 10, isActive: true)
         ]
 
-        return BarListView()
+        return BarListView(expandedBarId: .constant(-1))
             .environmentObject(mockViewModel)
     }
+    
 }
+
+

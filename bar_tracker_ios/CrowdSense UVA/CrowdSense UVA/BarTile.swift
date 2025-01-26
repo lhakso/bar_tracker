@@ -1,10 +1,16 @@
 import SwiftUI
+
 struct BarTile: View {
+    @EnvironmentObject var authVM: AuthViewModel
     let bar: Bar
+    let isExpanded: Bool
+    let onExpand: (Int) -> Void // Callback to notify parent about expansion
     @ObservedObject var viewModel: BarListViewModel
-    @State private var isExpanded = false
+    var namespace: Namespace.ID
     @State private var occupancy: Double = 5
     @State private var lineWait: Double = 0
+    
+    
     
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -13,7 +19,7 @@ struct BarTile: View {
             Text(bar.name)
                 .font(.title2)
                 .foregroundColor(.white)
-
+                .matchedGeometryEffect(id: "title_\(bar.id)", in: namespace)
 
             // If not expanded, show the "Submit Report" button
             if !isExpanded {
@@ -23,15 +29,11 @@ struct BarTile: View {
                     Text("Line Wait: \(bar.currentLineWait ?? 0) mins")
                 }
                 .foregroundColor(.white.opacity(0.85))
+
                 Button(action: {
-                    // Toggle the expansion state with animation
                     withAnimation {
-                        isExpanded.toggle()
+                        onExpand(bar.id)
                     }
-                    // Submit your data to the viewModel
-                    viewModel.submitOccupancy(barId: bar.id,
-                                              occupancy: bar.currentOccupancy ?? 0,
-                                              lineWait: bar.currentLineWait ?? 0)
                 }) {
                     Text("Submit Report")
                         .padding()
@@ -43,54 +45,73 @@ struct BarTile: View {
             }
 
             // If expanded, show the sliders + "Submit" button
-            if isExpanded {
+            else {
                 VStack {
                     Text("Occupancy")
                         .foregroundColor(.white)
+                        .matchedGeometryEffect(id: "occupancy_title_\(bar.id)", in: namespace)
                     HStack {
-                        // Left label
                         Text("Dead")
                             .foregroundColor(.white)
                             .padding(.horizontal, -20)
+
                         LabeledSlider(
                             value: $occupancy,
                             range: 1...10,
                             step: 1,
-                            unitString: "" // or any label you want
+                            unitString: ""
                         )
-                        // Right label
+
                         Text("Max")
                             .foregroundColor(.white)
                             .padding(.horizontal, -20)
                     }
                     .padding(.horizontal)
                     .padding(.top, 20)
+                    .matchedGeometryEffect(id: "occupancy_slider_\(bar.id)", in: namespace)
+
                     
                     Text("Line Wait")
                         .foregroundColor(.white)
+                        .matchedGeometryEffect(id: "linewait_title_\(bar.id)", in: namespace)
                     HStack {
-                        // Left label
                         Text("No wait")
                             .foregroundColor(.white)
                             .padding(.horizontal, -20)
-                    LabeledSlider(
-                        value: $lineWait,
-                        range: 0...60,
-                        step: 5,
-                        unitString: "mins"
-                    )
+
+                        LabeledSlider(
+                            value: $lineWait,
+                            range: 0...60,
+                            step: 5,
+                            unitString: "mins"
+                        )
+
                         Text("60+ mins")
                             .foregroundColor(.white)
                             .padding(.horizontal, -20)
                     }
                     .padding(.horizontal)
                     .padding(.top, 20)
-
+                    .matchedGeometryEffect(id: "linewait_slider_\(bar.id)", in: namespace)
                     Button(action: {
-                        print("Bar: \(bar.name), Occupancy: \(occupancy), Line Wait: \(lineWait)")
-                        // Collapse with an animation
+                        // Print debugging info
+                        print("Bar: \(bar.name), Occupancy: \(occupancy), Line Wait: \(lineWait), user: \(authVM.user)")
+
+                        // Submit to the backend
+                        viewModel.submitOccupancy(
+                            barId: String(bar.id),
+                            occupancy: Int(occupancy),
+                            lineWait: Int(round(lineWait / 6.0)), // Example: mapping 0-60 -> 0-10
+                            user: authVM.user,                     // use environment object
+                            completion: { success in
+                                    // do something
+                                }
+                        )
+
+                        // Collapse the panel with animation
                         withAnimation {
-                            isExpanded.toggle()
+                            onExpand(-1)
+
                         }
                     }) {
                         Text("Submit")
@@ -100,9 +121,9 @@ struct BarTile: View {
                             .cornerRadius(10)
                     }
                     .padding()
+                    .matchedGeometryEffect(id: "submit_button_\(bar.id)", in: namespace)
                 }
-                // Fade in/out transition
-                .transition(.opacity)
+                .transition(.scale)
             }
         }
         .padding()
@@ -119,7 +140,6 @@ struct BarTile: View {
         )
         .cornerRadius(20)
         .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
-        // Attach the animation to changes in isExpanded
         .animation(.easeInOut(duration: 0.3), value: isExpanded)
     }
 }

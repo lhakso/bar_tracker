@@ -9,9 +9,24 @@ import SwiftUI
 
 @main
 struct CrowdSense_UVAApp: App {
+    @StateObject private var authVM = AuthViewModel()
+    @StateObject private var locationManager = LocationManager()
+    @StateObject private var barListViewModel = BarListViewModel()
+    
+    init() {
+        locationManager.barListViewModel = barListViewModel
+    }
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            if authVM.isAuthenticated {
+                ContentView()
+                    .environmentObject(barListViewModel)
+                    .environmentObject(authVM)
+            } else {
+                LoginView()
+                    .environmentObject(authVM)
+            }
         }
     }
 }
