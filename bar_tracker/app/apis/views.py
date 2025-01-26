@@ -81,6 +81,8 @@ def get_user_email(request):
         return JsonResponse({"error": str(e)}, status=500)
 
 
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def get_bars(request):
     """Retrieve a list of all active bars."""
     bars = Bar.objects.filter(is_active=True)
@@ -195,35 +197,23 @@ def update_user_email(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
 def update_location(request):
-    if request.method == "POST":
-        try:
-            user = request.user
-            latitude = request.POST.get("latitude")
-            longitude = request.POST.get("longitude")
+    user = request.user
+    latitude = request.data.get("latitude")
+    longitude = request.data.get("longitude")
 
-            if not all([latitude, longitude]):
-                return JsonResponse(
-                    {"success": False, "message": "Missing location data."}, status=400
-                )
-            profile, created = UserProfile.objects.get_or_create(user=user)
-            # Update user's location in UserProfile
-            if profile.latitude != float(latitude) or profile.longitude != float(
-                longitude
-            ):
-                profile.latitude = float(latitude)
-                profile.longitude = float(longitude)
-                profile.last_updated = now()
-                profile.save()
+    if not latitude or not longitude:
+        return Response(
+            {"error": "Invalid location data"}, status=status.HTTP_400_BAD_REQUEST
+        )
 
-            return JsonResponse(
-                {"success": True, "message": "Location updated successfully."}
-            )
-        except Exception as e:
-            return JsonResponse(
-                {"success": False, "message": f"An error occurred: {e}"}, status=400
-            )
+    # Update the user's profile with the new location
+    user.profile.latitude = latitude
+    user.profile.longitude = longitude
+    user.profile.save()
 
-    return JsonResponse(
-        {"success": False, "message": "Invalid request method."}, status=405
+    return Response(
+        {"message": "Location updated successfully"}, status=status.HTTP_200_OK
     )
