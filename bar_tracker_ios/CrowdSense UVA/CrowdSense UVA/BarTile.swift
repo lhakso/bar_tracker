@@ -2,6 +2,7 @@ import SwiftUI
 
 struct BarTile: View {
     @EnvironmentObject var authVM: AuthViewModel
+    @EnvironmentObject var locationManager: LocationManager
     let bar: Bar
     let isExpanded: Bool
     let onExpand: (Int) -> Void // Callback to notify parent about expansion
@@ -103,6 +104,7 @@ struct BarTile: View {
                             occupancy: Int(occupancy),
                             lineWait: Int(round(lineWait / 6.0)), // Example: mapping 0-60 -> 0-10
                             user: authVM.user,                     // use environment object
+                            locationManager: locationManager,
                             completion: { success in
                                     // do something
                                 }

@@ -29,9 +29,22 @@
 		CF93084C2D3483BC00B61E10 /* CrowdSense UVAUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "CrowdSense UVAUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		CF72AFA62D497E1C00A9DE85 /* Exceptions for "CrowdSense UVA" folder in "CrowdSense UVA" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = CF9308312D3483BB00B61E10 /* CrowdSense UVA */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		CF9308342D3483BB00B61E10 /* CrowdSense UVA */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				CF72AFA62D497E1C00A9DE85 /* Exceptions for "CrowdSense UVA" folder in "CrowdSense UVA" target */,
+			);
 			path = "CrowdSense UVA";
 			sourceTree = "<group>";
 		};
@@ -396,6 +409,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"CrowdSense UVA/Preview Content\"";
+				DEVELOPMENT_TEAM = 8RNXLY2Z32;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -424,6 +438,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"CrowdSense UVA/Preview Content\"";
+				DEVELOPMENT_TEAM = 8RNXLY2Z32;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

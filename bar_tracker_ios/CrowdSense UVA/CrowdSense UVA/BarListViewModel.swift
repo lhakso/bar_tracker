@@ -7,7 +7,7 @@ class BarListViewModel: ObservableObject {
 
     // Fetch bar data from the backend
     func fetchBars() {
-        AuthService.shared.makeAuthenticatedRequest(endpoint: "/bars/") { data, response, error in
+        AuthService.shared.makeAuthenticatedRequest(endpoint: "/bars/", method: "GET", body: nil) { data, response, error in
             if let error = error {
                 print("Error fetching bars: \(error.localizedDescription)")
                 return
@@ -30,9 +30,15 @@ class BarListViewModel: ObservableObject {
         }
     }
 
-
     // Submit occupancy data to the backend
-    func submitOccupancy(barId: String, occupancy: Int, lineWait: Int, user: String, completion: @escaping (Bool) -> Void) {
+    func submitOccupancy(
+        barId: String,
+        occupancy: Int,
+        lineWait: Int,
+        user: String,
+        locationManager: LocationManager,
+        completion: @escaping (Bool) -> Void
+    ) {
         // Prepare the endpoint and payload
         let endpoint = "/submit_occupancy/"
         let payload: [String: Any] = [
@@ -41,54 +47,84 @@ class BarListViewModel: ObservableObject {
             "occupancy_level": occupancy,
             "line_wait": lineWait
         ]
-        print("payload: \(payload)")
-        
-        // Use the AuthService's `makeAuthenticatedRequest`
+        print("Submitting payload: \(payload)")
+
         AuthService.shared.makeAuthenticatedRequest(endpoint: endpoint, method: "POST", body: payload) { data, response, error in
             if let error = error {
-                print("Error: \(error)")
+                print("Error submitting occupancy: \(error.localizedDescription)")
                 completion(false)
                 return
             }
-            self.fetchBars()
-            
-            completion(true)
-            if let httpResponse = response as? HTTPURLResponse {
-                print("Status code: \(httpResponse.statusCode)")
+
+            guard let httpResponse = response as? HTTPURLResponse else {
+                print("No valid response received.")
+                completion(false)
+                return
             }
 
+            if httpResponse.statusCode == 200 {
+                print("Occupancy submitted successfully.")
+                
+                // Fetch updated bars
+                DispatchQueue.main.async {
+                    self.fetchBars()
+                }
+                
+                // Now retrieve REAL coordinates from locationManager
+                DispatchQueue.main.async {
+                    if let lastLocation = locationManager.lastLocation {
+                        let currentLatitude = lastLocation.coordinate.latitude
+                        let currentLongitude = lastLocation.coordinate.longitude
+
+                        self.submitUserLocation(latitude: currentLatitude, longitude: currentLongitude) { locationUpdated in
+                            if locationUpdated {
+                                print("Location updated after submitting occupancy.")
+                            } else {
+                                print("Failed to update location after submitting occupancy.")
+                            }
+                        }
+                    } else {
+                        print("No user location available to update after occupancy submission.")
+                    }
+                }
+                completion(true)
+            } else {
+                print("Failed to submit occupancy. Status code: \(httpResponse.statusCode)")
+                completion(false)
+            }
         }
     }
 
 
+    // Submit user location to the backend
+    func submitUserLocation(latitude: Double, longitude: Double, completion: ((Bool) -> Void)? = nil) {
+        let endpoint = "/update_location/"
+        let payload: [String: Any] = [
+            "latitude": latitude,
+            "longitude": longitude
+        ]
 
-
-    // Fetch user location from the backend
-    func getUserLocation() {
-        guard let url = URL(string: "http://127.0.0.1:8000/get_location/") else {
-            print("Invalid URL")
-            return
-        }
-
-        URLSession.shared.dataTask(with: url) { data, response, error in
+        AuthService.shared.makeAuthenticatedRequest(endpoint: endpoint, method: "POST", body: payload) { data, response, error in
             if let error = error {
-                print("Error fetching user location: \(error.localizedDescription)")
+                print("Error updating user location: \(error.localizedDescription)")
+                completion?(false)
                 return
             }
 
-            guard let data = data else {
-                print("No data returned")
+            guard let response = response as? HTTPURLResponse else {
+                print("No valid response received for location update.")
+                completion?(false)
                 return
             }
-            do {
-                let decodedLocation = try JSONDecoder().decode(Location.self, from: data)
-                DispatchQueue.main.async {
-                    self.userLocation = decodedLocation
-                }
-            } catch {
-                print("Error decoding location JSON: \(error.localizedDescription)")
+
+            if response.statusCode == 200 {
+                print("Location updated successfully!")
+                completion?(true)
+            } else {
+                print("Failed to update location. Status code: \(response.statusCode)")
+                completion?(false)
             }
-        }.resume()
+        }
     }
 }
 
@@ -98,6 +134,7 @@ struct Location: Decodable {
     let longitude: Double
 }
 
+// Bar structure to store bar data
 struct Bar: Identifiable, Decodable {
     let id: Int
     let name: String

@@ -13,15 +13,12 @@ struct CrowdSense_UVAApp: App {
     @StateObject private var locationManager = LocationManager()
     @StateObject private var barListViewModel = BarListViewModel()
     
-    init() {
-        locationManager.barListViewModel = barListViewModel
-    }
-    
     var body: some Scene {
         WindowGroup {
             if authVM.isAuthenticated {
                 ContentView()
                     .environmentObject(barListViewModel)
+                    .environmentObject(locationManager)
                     .environmentObject(authVM)
             } else {
                 LoginView()
