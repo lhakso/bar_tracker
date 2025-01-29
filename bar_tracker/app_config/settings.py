@@ -17,7 +17,7 @@ import dj_database_url
 import logging
 import os
 
-ALLOWED_HOSTS = ["crowdsense.onrender.com"]
+ALLOWED_HOSTS = ["https://crowdsense-9jqz.onrender.com"]
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
