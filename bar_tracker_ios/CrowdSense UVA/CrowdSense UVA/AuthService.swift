@@ -40,7 +40,7 @@ class AuthService {
     
     /// Register a new user with the backend.
     func register(username: String, password: String, completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "http://127.0.0.1:8000/register/") else {
+        guard let url = URL(string: "https://crowdsense-9jqz.onrender.com/register/") else {
             completion(false)
             return
         }
@@ -68,7 +68,7 @@ class AuthService {
     }
     
     func updateUserEmail(newEmail: String, completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "http://127.0.0.1:8000/update_email/") else {
+        guard let url = URL(string: "https://crowdsense-9jqz.onrender.com/update_email/") else {
             completion(false)
             return
         }
@@ -132,7 +132,7 @@ class AuthService {
 
     /// Attempt to log in by sending username/password to your Django DRF token endpoint.
     func login(username: String, password: String, completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "http://127.0.0.1:8000/api-token-auth/") else {
+        guard let url = URL(string: "https://crowdsense-9jqz.onrender.com/api-token-auth/") else {
             completion(false)
             return
         }
@@ -220,7 +220,7 @@ class AuthService {
         body: [String: Any]? = nil,
         completion: @escaping (Data?, URLResponse?, Error?) -> Void
     ) {
-        guard let url = URL(string: "http://127.0.0.1:8000\(endpoint)") else {
+        guard let url = URL(string: "https://crowdsense-9jqz.onrender.com\(endpoint)") else {
             completion(nil, nil, nil)
             return
         }

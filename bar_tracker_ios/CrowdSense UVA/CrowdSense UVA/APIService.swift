@@ -8,7 +8,7 @@
 import Foundation
 
 struct APIService {
-    private let baseURL = "https://your-backend-url.com/api/"
+    private let baseURL = "https://crowdsense-9jqz.onrender.com/"
 
     // Fetch bar data
     func fetchBars(completion: @escaping (Result<[Bar], Error>) -> Void) {
