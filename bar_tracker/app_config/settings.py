@@ -16,11 +16,39 @@ from decouple import config
 import dj_database_url
 import logging
 import os
+from django.core.exceptions import DisallowedHost
+
+ALLOWED_HOSTS = ["*"]
+USE_X_FORWARDED_HOST = True  # Allow proxy headers from Render
+MIDDLEWARE = [
+    "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+# TEMPORARY: Override Django's DisallowedHost exception
+MIDDLEWARE.insert(
+    1, "django.middleware.common.BrokenLinkEmailsMiddleware"
+)  # Helps log bad requests
+
+
+def handle_disallowed_host(request, exception):
+    from django.http import HttpResponse
+
+    return HttpResponse("Allowed", status=200)
+
+
+import django.core.handlers.exception
+
+django.core.handlers.exception.response_for_exception = handle_disallowed_host
 
 # ALLOWED_HOSTS = ["crowdsense-9jqz.onrender.com"]
-ALLOWED_HOSTS = ["*"]
 
-print("DEBUG: ALLOWED HOSTS: ", ALLOWED_HOSTS)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -66,17 +94,6 @@ INSTALLED_APPS = [
     "corsheaders",
 ]
 
-MIDDLEWARE = [
-    "corsheaders.middleware.CorsMiddleware",
-    "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-    "django.contrib.sessions.middleware.SessionMiddleware",
-    "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
-    "django.contrib.auth.middleware.AuthenticationMiddleware",
-    "django.contrib.messages.middleware.MessageMiddleware",
-    "django.middleware.clickjacking.XFrameOptionsMiddleware",
-]
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
