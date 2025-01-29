@@ -39,7 +39,6 @@ if SECRET_KEY == "unsafe-secret-key":
     )
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=False, cast=bool)
-ALLOWED_HOSTS = []
 CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/0")
 CELERY_TASK_IGNORE_RESULT = True  # Disables storing of task results
 CELERY_RESULT_BACKEND = None  # No result backend
