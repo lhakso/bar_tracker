@@ -16,7 +16,6 @@ from decouple import config
 import dj_database_url
 import logging
 import os
-from django.core.exceptions import DisallowedHost
 
 # ALLOWED_HOSTS = ["crowdsense-9jqz.onrender.com"]
 
@@ -81,6 +80,17 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
+
+
+def get_host_debug_middleware(get_response):
+    def middleware(request):
+        print("DEBUG: Incoming HTTP_HOST =", request.get_host())
+        return get_response(request)
+
+    return middleware
+
+
+MIDDLEWARE.insert(0, "app_config.settings.get_host_debug_middleware")
 
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
