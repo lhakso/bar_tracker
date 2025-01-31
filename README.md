@@ -69,12 +69,10 @@ BarTracker is a crowdsourced app that provides real-time information on bar occu
     ```bash
     python manage.py runserver
 
-<<<<<<< HEAD
 =======
 ## License
 This project is licensed under the MIT License.
 
->>>>>>> 520dcae (Initial commit with backend and iOS frontend structure)
 ## Contact
 Name: Luke Hakso   
 Email: luke.c.hakso@gmail.com  
