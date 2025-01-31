@@ -69,7 +69,7 @@ BarTracker is a crowdsourced app that provides real-time information on bar occu
     ```bash
     python manage.py runserver
 
-=======
+
 ## License
 This project is licensed under the MIT License.
 
