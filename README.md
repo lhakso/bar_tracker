@@ -7,7 +7,7 @@ BarTracker is a crowdsourced app that provides real-time information on bar occu
 ## Features
 
 - **Crowdsourced Data**: Users can submit occupancy levels and line wait times.
-- **Location-Based Occupancy**: Gets users near specific bars (If location access is allowed)
+- **Location-Based Occupancy**: Gets users near specific venues (If location access is allowed)
 - **User-Friendly Interface**: Simple and intuitive design for easy data submission.
 
 ---
