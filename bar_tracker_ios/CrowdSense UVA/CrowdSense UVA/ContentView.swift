@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import CoreLocation
 
 struct ContentView: View {
     // ViewModel to fetch and manage data
@@ -13,6 +14,8 @@ struct ContentView: View {
     @EnvironmentObject var authVM: AuthViewModel
     @State private var expandedBarId: Int? = -1
     @State private var showProfile = false
+    @StateObject private var locationManager = LocationManager()
+    private let manager = CLLocationManager()
     
     init() {
         // Customize Navigation Bar appearance to prevent transparency
@@ -47,6 +50,9 @@ struct ContentView: View {
                             }
                         }
                     }
+            }
+            .onAppear {
+                manager.requestWhenInUseAuthorization()
             }
             
         }
