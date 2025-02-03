@@ -97,7 +97,6 @@ struct BarTile: View {
                     Button(action: {
                         // Print debugging info
                         print("Bar: \(bar.name), Occupancy: \(occupancy), Line Wait: \(lineWait), user: \(authVM.user)")
-                        locationManager.requestSingleLocation()
                         // Submit to the backend
                         viewModel.submitOccupancy(
                             barId: String(bar.id),
