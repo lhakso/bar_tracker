@@ -11,25 +11,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
            super.init()
            manager.delegate = self
            manager.desiredAccuracy = kCLLocationAccuracyBest
-
-           // First, request When In Use authorization
-           if manager.authorizationStatus == .notDetermined {
-               manager.requestWhenInUseAuthorization()
-           } else if manager.authorizationStatus == .authorizedWhenInUse {
-               // If already "When In Use", request "Always Allow"
-               manager.requestAlwaysAuthorization()
-           }
-
            manager.startUpdatingLocation()
        }
-    func requestSingleLocation() {
-        manager.requestLocation()  // Triggers a one-time location check
-    }
-    func requestAlwaysPermission() {
-        if manager.authorizationStatus == .authorizedWhenInUse {
-            manager.requestAlwaysAuthorization()  // ✅ Requests "Always Allow" when possible
-        }
-    }
 
        func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
            switch manager.authorizationStatus {
