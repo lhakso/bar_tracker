@@ -12,7 +12,6 @@ class UserProfileAdmin(admin.ModelAdmin):
         "user",
         "email",
         "is_near_bar",
-        "last_updated",
         "strikes",
         "submissions",
     )
