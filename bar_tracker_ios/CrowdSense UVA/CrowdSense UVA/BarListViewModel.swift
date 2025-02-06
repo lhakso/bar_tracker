@@ -128,7 +128,7 @@ class BarListViewModel: ObservableObject {
     }
 }
 
-// Location structure to decode the response from get-location API
+// Location structure to decode the response from get-bar API
 struct Location: Decodable {
     let latitude: Double
     let longitude: Double
@@ -141,6 +141,8 @@ struct Bar: Identifiable, Decodable {
     let currentOccupancy: Int?
     let currentLineWait: Int?
     let isActive: Bool
+    let latitude: Double
+    let longitude: Double
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -148,5 +150,7 @@ struct Bar: Identifiable, Decodable {
         case currentOccupancy = "current_occupancy"
         case currentLineWait = "current_line_wait"
         case isActive = "is_active"
+        case latitude = "latitude"
+        case longitude = "longitude"
     }
 }

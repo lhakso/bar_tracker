@@ -98,17 +98,20 @@ struct BarTile: View {
                         // Print debugging info
                         print("Bar: \(bar.name), Occupancy: \(occupancy), Line Wait: \(lineWait), user: \(authVM.user)")
                         // Submit to the backend
-                        viewModel.submitOccupancy(
-                            barId: String(bar.id),
-                            occupancy: Int(occupancy),
-                            lineWait: Int(round(lineWait / 6.0)), // Example: mapping 0-60 -> 0-10
-                            user: authVM.user,                     // use environment object
-                            locationManager: locationManager,
-                            completion: { success in
+                        if locationManager.userIsNearBar {
+                            
+                            
+                            viewModel.submitOccupancy(
+                                barId: String(bar.id),
+                                occupancy: Int(occupancy),
+                                lineWait: Int(round(lineWait / 6.0)), // Example: mapping 0-60 -> 0-10
+                                user: authVM.user,                     // use environment object
+                                locationManager: locationManager,
+                                completion: { success in
                                     // do something
                                 }
-                        )
-                        
+                            )
+                        }
 
                         // Collapse the panel with animation
                         withAnimation {

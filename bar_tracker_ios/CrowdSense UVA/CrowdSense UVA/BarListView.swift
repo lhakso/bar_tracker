@@ -98,8 +98,8 @@ struct BarListView_Previews: PreviewProvider {
         // Mock ViewModel for previews
         let mockViewModel = BarListViewModel()
         mockViewModel.bars = [
-            Bar(id: 1, name: "Mock Bar 1", currentOccupancy: 75, currentLineWait: 5, isActive: true),
-            Bar(id: 2, name: "Mock Bar 2", currentOccupancy: 50, currentLineWait: 10, isActive: true)
+            Bar(id: 1, name: "Mock Bar 1", currentOccupancy: 75, currentLineWait: 5, isActive: true, latitude: -80.55, longitude: 74.55),
+            Bar(id: 2, name: "Mock Bar 2", currentOccupancy: 50, currentLineWait: 10, isActive: true, latitude: -60.55, longitude: 64.55)
         ]
 
         return BarListView(expandedBarId: .constant(-1))
