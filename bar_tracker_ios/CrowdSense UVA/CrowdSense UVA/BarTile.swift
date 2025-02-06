@@ -10,7 +10,7 @@ struct BarTile: View {
     var namespace: Namespace.ID
     @State private var occupancy: Double = 5
     @State private var lineWait: Double = 0
-    
+    @Binding var expandedBarId: Int?
     
     
     var body: some View {
@@ -97,26 +97,39 @@ struct BarTile: View {
                     Button(action: {
                         // Print debugging info
                         print("Bar: \(bar.name), Occupancy: \(occupancy), Line Wait: \(lineWait), user: \(authVM.user)")
-                        // Submit to the backend
-                        if locationManager.userIsNearBar {
+                        
+                        // Ensure we have an expanded bar
+                        guard let expandedBar = viewModel.bars.first(where: { $0.id == expandedBarId }) else {
+                            print("No expanded bar found")
+                            return
+                        }
+                        
+                        withAnimation { onExpand(-1) }
+                        
+                        // Check proximity asynchronously
+                        LocationManager.shared.checkAndUpdateUserProximity(bar: expandedBar) { isNear in
+                            print("User near bar?: \(isNear)")
+                            guard isNear else {
+                                print("User is not near the bar – submission aborted.")
+                                // Collapse the panel with animation even if submission is aborted
+                                withAnimation { onExpand(-1) }
+                                return
+                            }
                             
-                            
+                            print("User is near bar – proceeding with submission.")
                             viewModel.submitOccupancy(
                                 barId: String(bar.id),
                                 occupancy: Int(occupancy),
-                                lineWait: Int(round(lineWait / 6.0)), // Example: mapping 0-60 -> 0-10
-                                user: authVM.user,                     // use environment object
+                                lineWait: Int(round(lineWait / 6.0)), // Mapping 0-60 -> 0-10
+                                user: authVM.user,                     // Using the environment object
                                 locationManager: locationManager,
                                 completion: { success in
-                                    // do something
+                                    // Handle the submission result if needed
+                                    print("Occupancy submission success: \(success)")
                                 }
                             )
-                        }
-
-                        // Collapse the panel with animation
-                        withAnimation {
-                            onExpand(-1)
-
+                            
+                            // Collapse the panel with animation after submission
                         }
                     }) {
                         Text("Submit")

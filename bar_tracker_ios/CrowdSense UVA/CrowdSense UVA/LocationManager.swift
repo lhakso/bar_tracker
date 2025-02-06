@@ -3,10 +3,13 @@ import SwiftUI
 
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
-
-    // Store the user's last known location
+    static let shared = LocationManager()
     @Published var lastLocation: CLLocation?
     @Published var userIsNearBar: Bool = false
+    
+    private var locationRequestCompletion: ((CLLocation?) -> Void)?
+
+    
     override init() {
            super.init()
            manager.delegate = self
@@ -30,23 +33,52 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
            }
        }
 
+    func requestLocation(completion: @escaping (CLLocation?) -> Void) {
+        self.locationRequestCompletion = completion
+        manager.requestLocation()
+    }
+
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
-        guard let location = locations.last else { return }
-        lastLocation = location
+        guard let newLocation = locations.last else { return }
+        lastLocation = newLocation
+        locationRequestCompletion?(newLocation)
+        locationRequestCompletion = nil
     }
 
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Location manager error: \(error.localizedDescription)")
+        locationRequestCompletion?(nil)
+        locationRequestCompletion = nil
     }
-    func isUserNearBar(barLat: Double, barLon: Double, threshHoldMiles: Double=0.03, bar: Bar)-> Bool{
+    
+    private func computeProximity(for bar: Bar, with location: CLLocation, threshHoldMiles: Double) -> Bool {
         let barLocation = CLLocation(latitude: bar.latitude, longitude: bar.longitude)
-        guard let userLocation = lastLocation else { return false }
-        let distanceInMiles = userLocation.distance(from: barLocation) / 1609.34
-        let isNear = distanceInMiles <= 0.03
-
-        DispatchQueue.main.async { self.userIsNearBar = isNear }
-        return isNear
+        let distanceInMiles = location.distance(from: barLocation) / 1609.34
+        return distanceInMiles <= threshHoldMiles
     }
+    
+    func checkAndUpdateUserProximity(threshHoldMiles: Double = 5.03, bar: Bar, completion: @escaping (Bool) -> Void) {
+            // if have a lastLocation use it
+            if let location = lastLocation {
+                let isNear = computeProximity(for: bar, with: location, threshHoldMiles: threshHoldMiles)
+                updateUserIsNearBar(isNearBar: isNear)
+                DispatchQueue.main.async { self.userIsNearBar = isNear }
+                completion(isNear)
+            } else {
+                // else request a location update and then perform the check
+                requestLocation { [weak self] newLocation in
+                    guard let self = self, let location = newLocation else {
+                        completion(false)
+                        return
+                    }
+                    self.lastLocation = location  // update the stored location
+                    let isNear = self.computeProximity(for: bar, with: location, threshHoldMiles: threshHoldMiles)
+                    self.updateUserIsNearBar(isNearBar: isNear)
+                    DispatchQueue.main.async { self.userIsNearBar = isNear }
+                    completion(isNear)
+                }
+            }
+        }
     
     func updateUserIsNearBar(isNearBar: Bool) {
             let body: [String: Any] = ["is_near_bar": isNearBar]

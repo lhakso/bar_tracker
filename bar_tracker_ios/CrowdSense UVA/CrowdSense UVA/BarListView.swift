@@ -45,6 +45,7 @@ struct BarListView: View {
                     }
                     .zIndex(0.5) // Lower zIndex to be below the expanded BarTile
             }
+            
             if let expandedBar = viewModel.bars.first(where: { $0.id == expandedBarId }) {
                 BarTile(
                     bar: expandedBar,
@@ -55,7 +56,8 @@ struct BarListView: View {
                         }
                     },
                     viewModel: viewModel,
-                    namespace: animationNamespace
+                    namespace: animationNamespace,
+                    expandedBarId: $expandedBarId
                 )
                 .matchedGeometryEffect(id: "bar_\(expandedBar.id)", in: animationNamespace)
                 .zIndex(1) // Ensure expanded BarTile is above the overlay
@@ -74,6 +76,7 @@ struct BarListView: View {
                     .foregroundColor(.white)
             }
         }
+        
     }
     private func createBarTile(for bar: Bar) -> some View {
         
@@ -87,7 +90,8 @@ struct BarListView: View {
             
             },
             viewModel: viewModel,
-            namespace: animationNamespace
+            namespace: animationNamespace,
+            expandedBarId: $expandedBarId
         )
         .matchedGeometryEffect(id: "bar_\(bar.id)", in: animationNamespace)
     }
