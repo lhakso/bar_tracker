@@ -11,7 +11,8 @@ class UserProfileAdmin(admin.ModelAdmin):
     list_display = (
         "user",
         "email",
-        "is_near_bar" "last_updated",
+        "is_near_bar",
+        "last_updated",
         "strikes",
         "submissions",
     )
