@@ -11,9 +11,7 @@ class UserProfileAdmin(admin.ModelAdmin):
     list_display = (
         "user",
         "email",
-        "latitude",
-        "longitude",
-        "last_updated",
+        "is_near_bar",
         "strikes",
         "submissions",
     )

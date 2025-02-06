@@ -19,7 +19,6 @@ def calculate_displayed_values(bar: Bar) -> Tuple[int, int]:
         displayed_occupancy = round(
             sum(r.occupancy_level for r in reports) / len(reports)
         )
-
         displayed_line = round(sum(r.line_wait for r in reports) / len(reports))
     else:
         displayed_occupancy = None
@@ -66,19 +65,6 @@ def handle_user_strikes(user):
 
     if profile.strikes > 3:
         OccupancyReport.objects.filter(user=user).update(flagged=True)
-
-
-def get_users_near_bar(bar_lat, bar_lon) -> int:
-    threshold_miles = 0.03
-    users_nearby = []
-    for profile in UserProfile.objects.all():
-        if profile.latitude and profile.longitude:
-            distance = calculate_distance(
-                (profile.latitude, profile.longitude), (bar_lat, bar_lon)
-            )
-            if distance <= threshold_miles:
-                users_nearby.append(profile.user)
-    return users_nearby
 
 
 def verify_cooldown(user, bar, cooldown_minutes=10):

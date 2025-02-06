@@ -46,11 +46,10 @@ class UserProfile(models.Model):
     submissions = models.IntegerField(default=0)
     strikes = models.IntegerField(default=0)
     latitude = models.FloatField(null=True, blank=True)
-    longitude = models.FloatField(null=True, blank=True)
-    last_updated = models.DateTimeField(default=now)
+    is_near_bar = models.BooleanField(blank=True, default=False)
 
     def increment_strikes(self):
-        """Increment the strike count for the user."""
+        """increment the strike count for the user"""
         self.strikes += 1
         self.save()
 
@@ -59,4 +58,4 @@ class UserProfile(models.Model):
         self.save()
 
     def __str__(self):
-        return f"{self.user.username} Profile"
+        return f"{self.user.username} profile"
