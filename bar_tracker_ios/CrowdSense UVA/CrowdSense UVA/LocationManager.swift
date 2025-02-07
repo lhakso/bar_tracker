@@ -57,7 +57,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         return distanceInMiles <= threshHoldMiles
     }
     
-    func checkAndUpdateUserProximity(threshHoldMiles: Double = 5.03, bar: Bar, completion: @escaping (Bool) -> Void) {
+    func checkAndUpdateUserProximity(threshHoldMiles: Double = 0.03, bar: Bar, completion: @escaping (Bool) -> Void) {
             // if have a lastLocation use it
             if let location = lastLocation {
                 let isNear = computeProximity(for: bar, with: location, threshHoldMiles: threshHoldMiles)
