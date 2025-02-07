@@ -20,6 +20,7 @@ class AuthViewModel: ObservableObject {
             email = userInfo.email ?? ""
         }
     }
+    
     func updateEmail(newEmail: String, completion: @escaping (Bool) -> Void) {
         AuthService.shared.updateUserEmail(newEmail: newEmail) { [weak self] success in
             DispatchQueue.main.async {

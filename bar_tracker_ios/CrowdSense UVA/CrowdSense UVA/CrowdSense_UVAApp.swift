@@ -16,7 +16,7 @@ struct CrowdSense_UVAApp: App {
     var body: some Scene {
         WindowGroup {
             if authVM.isAuthenticated {
-                ContentView()
+                SplashView()
                     .environmentObject(barListViewModel)
                     .environmentObject(locationManager)
                     .environmentObject(authVM)

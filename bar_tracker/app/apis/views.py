@@ -12,13 +12,11 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
-from django.views.decorators.csrf import csrf_exempt
 from app.utils import (
     flag_fraudulent_entries,
     handle_user_strikes,
     verify_cooldown,
     calculate_displayed_values,
-    calculate_distance,
 )
 import logging
 
@@ -26,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 @api_view(["POST"])
-@permission_classes([AllowAny])  # Allow access without authentication
+@permission_classes([AllowAny])
 def register_user(request):
     """
     Public endpoint for user registration.
@@ -35,7 +33,7 @@ def register_user(request):
     password = request.data.get("password")
     email = request.data.get("email", "")
 
-    # Validate inputs
+    # validate inputs
     if not username or not password:
         return Response(
             {"error": "Username and password are required."},
@@ -95,6 +93,8 @@ def get_bars(request):
             "current_occupancy": bar.displayed_current_occupancy,
             "current_line_wait": bar.displayed_current_line,
             "is_active": bar.is_active,
+            "latitude": bar.latitude,
+            "longitude": bar.longitude,
         }
 
         bar_data.append(bar_info)
@@ -125,11 +125,6 @@ def submit_occupancy(request):
 
         # 3) Get the user from request (assuming session or token auth)
         user = request.user
-        if not user.is_authenticated:
-            return Response(
-                {"success": False, "error": "User is not authenticated."},
-                status=status.HTTP_401_UNAUTHORIZED,
-            )
 
         # 4) Check cooldown logic
         """if not verify_cooldown(user, bar):
@@ -199,21 +194,10 @@ def update_user_email(request):
 
 @api_view(["POST"])
 @permission_classes([IsAuthenticated])
-def update_location(request):
-    user = request.user
-    latitude = request.data.get("latitude")
-    longitude = request.data.get("longitude")
-
-    if not latitude or not longitude:
-        return Response(
-            {"error": "Invalid location data"}, status=status.HTTP_400_BAD_REQUEST
-        )
-
-    # Update the user's profile with the new location
-    user.profile.latitude = latitude
-    user.profile.longitude = longitude
-    user.profile.save()
-
+def is_user_near_bar(request):
+    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    profile.is_near_bar = bool(request.data.get("is_near_bar"))
+    profile.save()
     return Response(
-        {"message": "Location updated successfully"}, status=status.HTTP_200_OK
+        {"message": "is_near_bar updated successfully"}, status=status.HTTP_200_OK
     )

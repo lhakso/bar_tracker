@@ -10,14 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
-from celery.schedules import crontab
 from pathlib import Path
 from decouple import config
 import dj_database_url
 import logging
 import os
 
-# ALLOWED_HOSTS = ["crowdsense-9jqz.onrender.com"]
 
 ALLOWED_HOSTS = ["crowdsense-9jqz.onrender.com"]
 
@@ -28,7 +26,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config("SECRET_KEY", default="unsafe-secret-key")
 if SECRET_KEY == "unsafe-secret-key":
     logging.warning(
@@ -36,18 +33,8 @@ if SECRET_KEY == "unsafe-secret-key":
     )
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=False, cast=bool)
-CELERY_BROKER_URL = config("CELERY_BROKER_URL", default="redis://localhost:6379/0")
-CELERY_TASK_IGNORE_RESULT = True  # Disables storing of task results
-CELERY_RESULT_BACKEND = None  # No result backend
-CELERY_TIMEZONE = "US/Eastern"
 USE_TZ = True
 TIME_ZONE = "US/Eastern"
-CELERY_BEAT_SCHEDULE = {
-    "clear-reports-every-morning": {
-        "task": "app.tasks.clear_reports",
-        "schedule": crontab(hour=8, minute=0),  # Runs at 8:00 AM every day
-    },
-}
 
 CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=False, cast=bool)
 
@@ -61,7 +48,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "app",
-    "django_celery_beat",
     "corsheaders",
 ]
 

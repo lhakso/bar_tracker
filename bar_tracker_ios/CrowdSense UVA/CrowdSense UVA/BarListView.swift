@@ -45,6 +45,7 @@ struct BarListView: View {
                     }
                     .zIndex(0.5) // Lower zIndex to be below the expanded BarTile
             }
+            
             if let expandedBar = viewModel.bars.first(where: { $0.id == expandedBarId }) {
                 BarTile(
                     bar: expandedBar,
@@ -55,7 +56,8 @@ struct BarListView: View {
                         }
                     },
                     viewModel: viewModel,
-                    namespace: animationNamespace
+                    namespace: animationNamespace,
+                    expandedBarId: $expandedBarId
                 )
                 .matchedGeometryEffect(id: "bar_\(expandedBar.id)", in: animationNamespace)
                 .zIndex(1) // Ensure expanded BarTile is above the overlay
@@ -74,6 +76,7 @@ struct BarListView: View {
                     .foregroundColor(.white)
             }
         }
+        
     }
     private func createBarTile(for bar: Bar) -> some View {
         
@@ -87,7 +90,8 @@ struct BarListView: View {
             
             },
             viewModel: viewModel,
-            namespace: animationNamespace
+            namespace: animationNamespace,
+            expandedBarId: $expandedBarId
         )
         .matchedGeometryEffect(id: "bar_\(bar.id)", in: animationNamespace)
     }
@@ -98,8 +102,8 @@ struct BarListView_Previews: PreviewProvider {
         // Mock ViewModel for previews
         let mockViewModel = BarListViewModel()
         mockViewModel.bars = [
-            Bar(id: 1, name: "Mock Bar 1", currentOccupancy: 75, currentLineWait: 5, isActive: true),
-            Bar(id: 2, name: "Mock Bar 2", currentOccupancy: 50, currentLineWait: 10, isActive: true)
+            Bar(id: 1, name: "Mock Bar 1", currentOccupancy: 75, currentLineWait: 5, isActive: true, latitude: -80.55, longitude: 74.55),
+            Bar(id: 2, name: "Mock Bar 2", currentOccupancy: 50, currentLineWait: 10, isActive: true, latitude: -60.55, longitude: 64.55)
         ]
 
         return BarListView(expandedBarId: .constant(-1))

@@ -63,29 +63,9 @@ class BarListViewModel: ObservableObject {
             }
 
             if httpResponse.statusCode == 200 {
-                print("Occupancy submitted successfully.")
-                
-                // Fetch updated bars
+                // fetch updated bars on the main thread
                 DispatchQueue.main.async {
                     self.fetchBars()
-                }
-                
-                // Now retrieve REAL coordinates from locationManager
-                DispatchQueue.main.async {
-                    if let lastLocation = locationManager.lastLocation {
-                        let currentLatitude = lastLocation.coordinate.latitude
-                        let currentLongitude = lastLocation.coordinate.longitude
-
-                        self.submitUserLocation(latitude: currentLatitude, longitude: currentLongitude) { locationUpdated in
-                            if locationUpdated {
-                                print("Location updated after submitting occupancy.")
-                            } else {
-                                print("Failed to update location after submitting occupancy.")
-                            }
-                        }
-                    } else {
-                        print("No user location available to update after occupancy submission.")
-                    }
                 }
                 completion(true)
             } else {
@@ -94,41 +74,9 @@ class BarListViewModel: ObservableObject {
             }
         }
     }
-
-
-    // Submit user location to the backend
-    func submitUserLocation(latitude: Double, longitude: Double, completion: ((Bool) -> Void)? = nil) {
-        let endpoint = "/update_location/"
-        let payload: [String: Any] = [
-            "latitude": latitude,
-            "longitude": longitude
-        ]
-
-        AuthService.shared.makeAuthenticatedRequest(endpoint: endpoint, method: "POST", body: payload) { data, response, error in
-            if let error = error {
-                print("Error updating user location: \(error.localizedDescription)")
-                completion?(false)
-                return
-            }
-
-            guard let response = response as? HTTPURLResponse else {
-                print("No valid response received for location update.")
-                completion?(false)
-                return
-            }
-
-            if response.statusCode == 200 {
-                print("Location updated successfully!")
-                completion?(true)
-            } else {
-                print("Failed to update location. Status code: \(response.statusCode)")
-                completion?(false)
-            }
-        }
-    }
 }
 
-// Location structure to decode the response from get-location API
+// Location structure to decode the response from get-bar API
 struct Location: Decodable {
     let latitude: Double
     let longitude: Double
@@ -141,6 +89,8 @@ struct Bar: Identifiable, Decodable {
     let currentOccupancy: Int?
     let currentLineWait: Int?
     let isActive: Bool
+    let latitude: Double
+    let longitude: Double
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -148,5 +98,7 @@ struct Bar: Identifiable, Decodable {
         case currentOccupancy = "current_occupancy"
         case currentLineWait = "current_line_wait"
         case isActive = "is_active"
+        case latitude = "latitude"
+        case longitude = "longitude"
     }
 }
