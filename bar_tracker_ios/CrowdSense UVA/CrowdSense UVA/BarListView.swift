@@ -32,6 +32,7 @@ struct BarListView: View {
                 .padding()
                 
             }
+            
             if expandedBarId != -1 {
                 Color(red: 10/255, green: 10/255, blue: 60/255)
                 //Color.black.opacity(0.4)

@@ -33,7 +33,7 @@ struct ContentView: View {
             Color(red: 10/255, green: 10/255, blue: 60/255)
                 .ignoresSafeArea()
 
-            NavigationView {
+            NavigationStack {
                 BarListView(expandedBarId: $expandedBarId) // Using BarListView directly
                     .navigationBarTitleDisplayMode(.inline) // Ensures consistent title placement
                     .toolbar {

@@ -13,7 +13,7 @@ struct SplashView: View {
     
     var body: some View {
             if isActive {
-                ContentView()
+                    ContentView()
             } else {
                 Image("logo_no_background")
                     .resizable()
