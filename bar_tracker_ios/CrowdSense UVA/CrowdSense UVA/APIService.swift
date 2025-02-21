@@ -37,6 +37,13 @@ struct APIService {
         request.httpMethod = "POST"
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
+        // Retrieve the token using the provided method
+        guard let token = AuthService.shared.getAnonymousToken() else {
+            // Handle error if token cannot be obtained
+            return
+        }
+        request.setValue(token, forHTTPHeaderField: "Authorization")
+        
         let body: [String: Any] = [
             "bar_id": barId,
             "occupancy_level": occupancy,
@@ -53,6 +60,8 @@ struct APIService {
             completion(.success(true))
         }.resume()
     }
+
+
 
     // Submit location data
     func submitLocation(latitude: Double, longitude: Double, completion: @escaping (Result<Bool, Error>) -> Void) {
