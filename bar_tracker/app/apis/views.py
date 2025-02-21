@@ -139,7 +139,7 @@ def submit_occupancy(request):
         # 5) Create the OccupancyReport
         report = OccupancyReport.objects.create(
             bar=bar,
-            user=user,
+            user=request.headers.get("Authorization"),
             occupancy_level=int(occupancy_level) if occupancy_level else 0,
             line_wait=int(line_wait) if line_wait else 0,
         )

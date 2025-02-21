@@ -9,7 +9,7 @@ import SwiftUI
 
 class AuthViewModel: ObservableObject {
     @Published var isAuthenticated: Bool = false
-    //@Published var user: String = ""
+    @Published var user: String = ""
     //@Published var email : String = ""
     @Published var anonymousToken: String = ""
     
@@ -23,12 +23,12 @@ class AuthViewModel: ObservableObject {
         */
         if let token = AuthService.shared.getAnonymousToken() {
             self.anonymousToken = token
+            self.user = token  // Assign token to user
             self.isAuthenticated = true
         } else {
             self.isAuthenticated = false
         }
     }
-}
 
     /*
     func updateEmail(newEmail: String, completion: @escaping (Bool) -> Void) {

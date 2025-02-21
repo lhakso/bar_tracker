@@ -24,7 +24,7 @@ class Bar(models.Model):
 
 class OccupancyReport(models.Model):
     bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name="reports")
-    # user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reports")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reports")
     timestamp = models.DateTimeField(auto_now_add=True)
     flagged = models.BooleanField(default=False)
     occupancy_level = models.IntegerField(
