@@ -35,7 +35,7 @@ class BarListViewModel: ObservableObject {
         barId: String,
         occupancy: Int,
         lineWait: Int,
-        user: String,
+        //user: String,
         locationManager: LocationManager,
         completion: @escaping (Bool) -> Void
     ) {
@@ -43,7 +43,7 @@ class BarListViewModel: ObservableObject {
         let endpoint = "/submit_occupancy/"
         let payload: [String: Any] = [
             "bar_id": barId,
-            "user": user,
+            //"user": user,
             "occupancy_level": occupancy,
             "line_wait": lineWait
         ]

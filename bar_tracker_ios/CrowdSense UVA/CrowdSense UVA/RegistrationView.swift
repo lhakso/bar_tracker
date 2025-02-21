@@ -4,7 +4,7 @@
 //
 //  Created by Luke Hakso on 1/17/25.
 //
-
+/*
 import SwiftUI
 
 struct RegistrationView: View {
@@ -74,3 +74,4 @@ struct RegistrationView: View {
         }
     }
 }
+*/

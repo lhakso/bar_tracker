@@ -1,3 +1,4 @@
+/*
 import SwiftUI
 
 struct ProfileView: View {
@@ -108,3 +109,4 @@ struct ProfileView: View {
         }
     }
 }
+*/
