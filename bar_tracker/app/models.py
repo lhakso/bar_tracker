@@ -45,7 +45,6 @@ class UserProfile(models.Model):
     email = models.EmailField(unique=True, null=True, blank=True)
     submissions = models.IntegerField(default=0)
     strikes = models.IntegerField(default=0)
-    latitude = models.FloatField(null=True, blank=True)
     is_near_bar = models.BooleanField(blank=True, default=False)
 
     def increment_strikes(self):
