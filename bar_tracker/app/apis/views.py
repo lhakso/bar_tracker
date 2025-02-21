@@ -10,6 +10,7 @@ from app.serializers import UpdateEmailSerializer
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
+from .permissions import ValidTokenPermission
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from app.utils import (
@@ -61,7 +62,7 @@ def register_user(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([ValidTokenPermission])
 def get_user_email(request):
     try:
         # Use the authenticated user
@@ -80,7 +81,7 @@ def get_user_email(request):
 
 
 @api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@permission_classes([ValidTokenPermission])
 def get_bars(request):
     """Retrieve a list of all active bars."""
     bars = Bar.objects.filter(is_active=True)
@@ -103,7 +104,7 @@ def get_bars(request):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([ValidTokenPermission])
 def submit_occupancy(request):
     """
     DRF-based version of your submit_occupancy endpoint.
@@ -173,7 +174,7 @@ def submit_occupancy(request):
 
 
 @api_view(["PATCH"])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([ValidTokenPermission])
 def update_user_email(request):
     user = request.user
 
@@ -193,7 +194,7 @@ def update_user_email(request):
 
 
 @api_view(["POST"])
-@permission_classes([IsAuthenticated])
+@permission_classes([ValidTokenPermission])
 def is_user_near_bar(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
     profile.is_near_bar = bool(request.data.get("is_near_bar"))
