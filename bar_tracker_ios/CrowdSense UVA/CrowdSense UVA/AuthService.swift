@@ -20,6 +20,8 @@ class AuthService {
     private let account = "authToken"
     private init() {}
 
+    // MARK: - User Info (Not needed for anonymous token flow)
+    /*
     func saveUserInfo(username: String) {
         let _ = KeychainHelper.shared.save(username.data(using: .utf8)!, service: userInfoService, account: usernameAccount)
     }
@@ -37,175 +39,65 @@ class AuthService {
         let _ = KeychainHelper.shared.delete(service: userInfoService, account: usernameAccount)
         let _ = KeychainHelper.shared.delete(service: userInfoService, account: emailAccount)
     }
-    
-    /// Register a new user with the backend.
+    */
+
+    // MARK: - Registration and Login (Not needed for anonymous token flow)
+    /*
     func register(username: String, password: String, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "https://crowdsense-9jqz.onrender.com/register/") else {
             completion(false)
             return
         }
-
-        // Prepare the JSON body with username and password
-        let bodyDict = ["username": username, "password": password]
-        guard let bodyData = try? JSONSerialization.data(withJSONObject: bodyDict, options: []) else {
-            completion(false)
-            return
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = bodyData
-
-        // Send the request
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            guard let response = response as? HTTPURLResponse, response.statusCode == 201 else {
-                completion(false)
-                return
-            }
-            completion(true)
-        }.resume()
+        // Prepare the JSON body with username and password, etc.
     }
     
-    func updateUserEmail(newEmail: String, completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "https://crowdsense-9jqz.onrender.com/update_email/") else {
-            completion(false)
-            return
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "PATCH"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-
-        // Attach token
-        if let token = AuthService.shared.getToken() {
-            request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
-        }
-
-        let body = ["email": newEmail]
-        request.httpBody = try? JSONSerialization.data(withJSONObject: body, options: [])
-
-        URLSession.shared.dataTask(with: request) { data, response, error in
-            if let error = error {
-                print("Error updating email:", error)
-                completion(false)
-                return
-            }
-
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                completion(true)
-            } else {
-                completion(false)
-            }
-        }.resume()
-    }
-    
-    func fetchEmail(completion: @escaping (String?) -> Void) {
-        let endpoint = "/get_email/"
-        AuthService.shared.makeAuthenticatedRequest(endpoint: endpoint, method: "GET", body: nil) { data, response, error in
-            if let error = error {
-                print("Error fetching email:", error)
-                completion(nil)
-                return
-            }
-
-            guard let data = data else {
-                print("No data received")
-                completion(nil)
-                return
-            }
-
-            do {
-                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let email = json["email"] as? String {
-                    completion(email)
-                } else {
-                    print("Invalid JSON response or missing 'email' key")
-                    completion(nil)
-                }
-            } catch {
-                print("JSON parsing error:", error)
-                completion(nil)
-            }
-        }
-    }
-
-    /// Attempt to log in by sending username/password to your Django DRF token endpoint.
     func login(username: String, password: String, completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "https://crowdsense-9jqz.onrender.com/api-token-auth/") else {
             completion(false)
             return
         }
+        // JSON body, send login request, and handle token storage...
+    }
+    
+    func updateUserEmail(newEmail: String, completion: @escaping (Bool) -> Void) {
+        // Function for updating user email.
+    }
+    
+    func fetchEmail(completion: @escaping (String?) -> Void) {
+        // Function for fetching user email.
+    }
+    */
 
-        // JSON body
-        let bodyDict = ["username": username, "password": password]
-        guard let bodyData = try? JSONSerialization.data(withJSONObject: bodyDict, options: []) else {
-            completion(false)
-            return
+    // MARK: - Anonymous Token Support
+
+    /// Returns an anonymous token.
+    /// If a token already exists, it returns that token.
+    /// Otherwise, it generates a new token, saves it, and returns it.
+    func getAnonymousToken() -> String? {
+        if let token = getToken() {
+            return token
+        } else {
+            let token = UUID().uuidString
+            guard let tokenData = token.data(using: .utf8) else { return nil }
+            let saved = KeychainHelper.shared.save(tokenData, service: service, account: account)
+            if saved {
+                return token
+            }
+            return nil
         }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = bodyData
-
-        URLSession.shared.dataTask(with: request) { [weak self] data, response, error in
-            guard let self = self else { return }
-
-            if let error = error {
-                print("Login error:", error)
-                completion(false)
-                return
-            }
-
-            guard let data = data else {
-                print("No data received during login")
-                completion(false)
-                return
-            }
-
-            // Example JSON response: {"token":"<your_token_here>"}
-            do {
-                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                   let token = json["token"] as? String,
-                   let tokenData = token.data(using: .utf8) {
-
-                    // Save token to Keychain
-                    let tokenSaved = KeychainHelper.shared.save(tokenData, service: self.service, account: self.account)
-
-                    // Save username to Keychain
-                    self.saveUserInfo(username: username)
-
-                    if tokenSaved {
-                        DispatchQueue.main.async {
-                            print("Login successful for user: \(username)")
-                            completion(true)
-                        }
-                    } else {
-                        print("Failed to save token to Keychain")
-                        completion(false)
-                    }
-                } else {
-                    print("Invalid JSON response or missing keys")
-                    completion(false)
-                }
-            } catch {
-                print("JSON parsing error:", error)
-                completion(false)
-            }
-        }.resume()
     }
-
-    /// Check if we already have a token (simple memory check here).
+    
+    /// Checks whether a token exists (i.e., if the user is "logged in" anonymously).
     func isLoggedIn() -> Bool {
-        guard let _ = getToken() else { return false }
-        return true
+        return getAnonymousToken() != nil
     }
 
-    /// Log out by clearing the token.
+    /// Logs out by clearing the token.
     func logout() {
         let _ = KeychainHelper.shared.delete(service: service, account: account)
     }
+    
+    /// Retrieves the token from Keychain if it exists.
     private func getToken() -> String? {
         if let tokenData = KeychainHelper.shared.retrieve(service: service, account: account),
            let token = String(data: tokenData, encoding: .utf8) {
@@ -213,6 +105,9 @@ class AuthService {
         }
         return nil
     }
+    
+    // MARK: - Authenticated Requests
+
     /// Example: Make an authenticated request.
     func makeAuthenticatedRequest(
         endpoint: String,
@@ -228,7 +123,7 @@ class AuthService {
         var request = URLRequest(url: url)
         request.httpMethod = method
 
-        // Attach token if we have it
+        // Attach token if we have it.
         if let token = getToken() {
             request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
         }

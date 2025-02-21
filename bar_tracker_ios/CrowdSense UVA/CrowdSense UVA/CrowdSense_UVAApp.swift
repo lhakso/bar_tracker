@@ -20,10 +20,10 @@ struct CrowdSense_UVAApp: App {
                     .environmentObject(barListViewModel)
                     .environmentObject(locationManager)
                     .environmentObject(authVM)
-            } else {
+            } /*else {
                 LoginView()
                     .environmentObject(authVM)
-            }
+            }*/
         }
     }
 }

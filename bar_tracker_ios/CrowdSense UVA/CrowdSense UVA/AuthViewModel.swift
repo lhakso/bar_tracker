@@ -9,18 +9,28 @@ import SwiftUI
 
 class AuthViewModel: ObservableObject {
     @Published var isAuthenticated: Bool = false
-    @Published var user: String = ""
-    @Published var email : String = ""
+    //@Published var user: String = ""
+    //@Published var email : String = ""
+    @Published var anonymousToken: String = ""
     
     init() {
+        /*
         isAuthenticated = AuthService.shared.isLoggedIn()
         if isAuthenticated {
             let userInfo = AuthService.shared.getUserInfo()
-            user = userInfo.username ?? ""
-            email = userInfo.email ?? ""
+            //user = userInfo.username ?? ""
+            //email = userInfo.email ?? ""
+        */
+        if let token = AuthService.shared.getAnonymousToken() {
+            self.anonymousToken = token
+            self.isAuthenticated = true
+        } else {
+            self.isAuthenticated = false
         }
     }
-    
+}
+
+    /*
     func updateEmail(newEmail: String, completion: @escaping (Bool) -> Void) {
         AuthService.shared.updateUserEmail(newEmail: newEmail) { [weak self] success in
             DispatchQueue.main.async {
@@ -59,3 +69,4 @@ class AuthViewModel: ObservableObject {
         isAuthenticated = false
     }
 }
+*/

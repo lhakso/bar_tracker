@@ -43,11 +43,13 @@ struct ContentView: View {
                                 .foregroundColor(.white)
                         }
                         ToolbarItem(placement: .navigationBarTrailing) {
+                            /*
                             NavigationLink(destination: ProfileView()) {
                                 Image(systemName: "line.horizontal.3")
                                     .imageScale(.large)
                                     .foregroundColor(.white)
                             }
+                             */
                         }
                     }
             }
