@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 
 
 def clear_reports():
-    deleted_count, _ = OccupancyReport.objects.all().delete()  # Get the count of deleted entries
+    deleted_count, _ = OccupancyReport.objects.all().delete()
     message = f"Deleted {deleted_count} reports."
     logger.info(message)
-    return message 
+    return message
