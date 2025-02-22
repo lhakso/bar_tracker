@@ -22,6 +22,7 @@ from app.utils import (
     handle_user_strikes,
     verify_cooldown,
     calculate_displayed_values,
+    get_user_from_request,
 )
 import logging
 
@@ -158,25 +159,7 @@ def submit_occupancy(request):
             handle_user_strikes(user)
 
         bar.save()
-        auth_header = request.headers.get("Authorization")
-
-        if not auth_header:
-            return Response(
-                {"error": "Missing token"}, status=status.HTTP_400_BAD_REQUEST
-            )
-        token = auth_header
-
-        # Remove the "Token " prefix if present.
-        if token.startswith("Token "):
-            token = token[6:]
-
-        try:
-            user = User.objects.get(username=token)
-        except User.DoesNotExist:
-            return Response(
-                {"error": "User not found for this token"},
-                status=status.HTTP_404_NOT_FOUND,
-            )
+        user, error_response = get_user_from_request(request)
 
         # Track user submissions
         profile, created = UserProfile.objects.get_or_create(user=user)
@@ -221,7 +204,9 @@ def update_user_email(request):
 @permission_classes([ValidTokenPermission])
 @authentication_classes([])
 def is_user_near_bar(request):
-    profile, created = UserProfile.objects.get_or_create(user=request.user)
+    user, error_response = get_user_from_request(request)
+
+    profile, created = UserProfile.objects.get_or_create(user=user)
     profile.is_near_bar = bool(request.data.get("is_near_bar"))
     profile.save()
     return Response(

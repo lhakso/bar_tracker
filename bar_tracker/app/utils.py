@@ -4,6 +4,9 @@ from app.models import UserProfile, OccupancyReport, Bar
 from geopy.distance import geodesic
 import math
 from typing import Tuple
+from django.contrib.auth.models import User
+from rest_framework.response import Response
+from rest_framework import status
 
 
 def calculate_displayed_values(bar: Bar) -> Tuple[int, int]:
@@ -83,3 +86,23 @@ def calculate_distance(
     user_coords: Tuple[float, float], bar_coords: Tuple[float, float]
 ) -> float:
     return geodesic(user_coords, bar_coords).miles
+
+
+def get_user_from_request(request):
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
+        return None, Response(
+            {"error": "Missing token"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    token = auth_header
+    if token.startswith("Token "):
+        token = token[6:]
+
+    try:
+        user = User.objects.get(username=token)
+        return user, None
+    except User.DoesNotExist:
+        return None, Response(
+            {"error": "User not found for this token"}, status=status.HTTP_404_NOT_FOUND
+        )
