@@ -164,12 +164,12 @@ def submit_occupancy(request):
             return Response(
                 {"error": "Missing token"}, status=status.HTTP_400_BAD_REQUEST
             )
+        token = auth_header
 
         # Remove the "Token " prefix if present.
         if token.startswith("Token "):
             token = token[6:]
 
-        token = auth_header
         try:
             user = User.objects.get(username=token)
         except User.DoesNotExist:
