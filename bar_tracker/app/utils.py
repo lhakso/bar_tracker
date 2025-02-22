@@ -89,6 +89,7 @@ def calculate_distance(
 
 
 def get_user_from_request(request):
+    """need this because using anon tokens caused django to treat user class diff, so need to idenitfy by username"""
     auth_header = request.headers.get("Authorization")
     if not auth_header:
         return None, Response(
