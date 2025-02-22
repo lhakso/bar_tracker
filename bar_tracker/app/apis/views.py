@@ -34,11 +34,12 @@ def register_user(request):
     """
     Public endpoint for user registration.
     """
-    username = request.data.get("username")
-    password = request.data.get("password")
-    email = request.data.get("email", "")
+    token = request.data.get("user")
+    # password = request.data.get("password")
+    # email = request.data.get("email", "")
 
     # validate inputs
+    """
     if not username or not password:
         return Response(
             {"error": "Username and password are required."},
@@ -50,13 +51,10 @@ def register_user(request):
             {"error": "A user with this username already exists."},
             status=status.HTTP_400_BAD_REQUEST,
         )
-
+"""
     # Create the user
-    user = User.objects.create(
-        username=username,
-        email=email,
-        password=make_password(password),  # Hash the password
-    )
+    user, created = User.objects.get_or_create(username=token)
+    user.set_unusable_password()
     user.save()
 
     return Response(
