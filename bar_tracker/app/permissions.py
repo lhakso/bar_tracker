@@ -12,6 +12,9 @@ class ValidTokenPermission(BasePermission):
         if not token:
             return False
 
+        # Remove the "Token " prefix if present.
+        if token.startswith("Token "):
+            token = token[6:]
         try:
             uuid.UUID(token)
         except (ValueError, AttributeError):
