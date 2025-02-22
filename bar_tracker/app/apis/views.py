@@ -158,6 +158,13 @@ def submit_occupancy(request):
             handle_user_strikes(user)
 
         bar.save()
+        auth_header = request.headers.get("Authorization")
+
+        if not auth_header:
+            return Response(
+                {"error": "Missing token"}, status=status.HTTP_400_BAD_REQUEST
+            )
+        token = auth_header
         try:
             user = User.objects.get(username=token)
         except User.DoesNotExist:
