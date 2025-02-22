@@ -86,7 +86,7 @@ def get_user_email(request):
 
 @api_view(["GET"])
 @permission_classes([ValidTokenPermission])
-# @authentication_classes([])
+@authentication_classes([])
 def get_bars(request):
     """Retrieve a list of all active bars."""
     bars = Bar.objects.filter(is_active=True)
@@ -110,6 +110,7 @@ def get_bars(request):
 
 @api_view(["POST"])
 @permission_classes([ValidTokenPermission])
+@authentication_classes([])
 def submit_occupancy(request):
     """
     DRF-based version of your submit_occupancy endpoint.
@@ -180,6 +181,7 @@ def submit_occupancy(request):
 
 @api_view(["PATCH"])
 @permission_classes([ValidTokenPermission])
+@authentication_classes([])
 def update_user_email(request):
     user = request.user
 
@@ -200,6 +202,7 @@ def update_user_email(request):
 
 @api_view(["POST"])
 @permission_classes([ValidTokenPermission])
+@authentication_classes([])
 def is_user_near_bar(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
     profile.is_near_bar = bool(request.data.get("is_near_bar"))
