@@ -158,6 +158,13 @@ def submit_occupancy(request):
             handle_user_strikes(user)
 
         bar.save()
+        try:
+            user = User.objects.get(username=token)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found for this token"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
 
         # Track user submissions
         profile, created = UserProfile.objects.get_or_create(user=user)
