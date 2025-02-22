@@ -86,7 +86,7 @@ def get_user_email(request):
 
 @api_view(["GET"])
 @permission_classes([ValidTokenPermission])
-@authentication_classes([])
+# @authentication_classes([])
 def get_bars(request):
     """Retrieve a list of all active bars."""
     bars = Bar.objects.filter(is_active=True)
