@@ -8,7 +8,11 @@ from rest_framework import status
 from rest_framework import permissions
 from app.serializers import UpdateEmailSerializer
 from rest_framework.permissions import AllowAny
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+    authentication_classes,
+)
 from rest_framework.permissions import IsAuthenticated
 from app.permissions import ValidTokenPermission
 from django.contrib.auth.models import User
@@ -82,6 +86,7 @@ def get_user_email(request):
 
 @api_view(["GET"])
 @permission_classes([AllowAny])
+@authentication_classes([])
 def get_bars(request):
     """Retrieve a list of all active bars."""
     bars = Bar.objects.filter(is_active=True)
