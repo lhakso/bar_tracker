@@ -402,8 +402,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "CrowdSense-UVA-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location for better user experience";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location even when the app is in the background for better accuracy.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "CrowdSense UVA requires access to your location at all times to deliver real-time updates about nearby venues and to ensure accurate occupancy reporting even when the app is running in the background.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "CrowdSense UVA uses your location while you’re using the app to display nearby bars and to help you submit accurate occupancy reports.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -437,8 +437,8 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "CrowdSense-UVA-Info.plist";
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
-				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "We need your location for better user experience";
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "We need your location even when the app is in the background for better accuracy.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "CrowdSense UVA requires access to your location at all times to deliver real-time updates about nearby venues and to ensure accurate occupancy reporting even when the app is running in the background.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "CrowdSense UVA uses your location while you’re using the app to display nearby bars and to help you submit accurate occupancy reports.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

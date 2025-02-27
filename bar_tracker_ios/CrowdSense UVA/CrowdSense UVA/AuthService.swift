@@ -20,55 +20,49 @@ class AuthService {
     private let account = "authToken"
     private init() {}
 
-    // MARK: - User Info (Not needed for anonymous token flow)
-    /*
     func saveUserInfo(username: String) {
         let _ = KeychainHelper.shared.save(username.data(using: .utf8)!, service: userInfoService, account: usernameAccount)
     }
-
-    func getUserInfo() -> (username: String?, email: String?) {
-        let usernameData = KeychainHelper.shared.retrieve(service: userInfoService, account: usernameAccount)
-        let emailData = KeychainHelper.shared.retrieve(service: userInfoService, account: emailAccount)
-
-        let username = usernameData.flatMap { String(data: $0, encoding: .utf8) }
-        let email = emailData.flatMap { String(data: $0, encoding: .utf8) }
-        return (username, email)
-    }
-
-    func clearUserInfo() {
-        let _ = KeychainHelper.shared.delete(service: userInfoService, account: usernameAccount)
-        let _ = KeychainHelper.shared.delete(service: userInfoService, account: emailAccount)
-    }
-    */
-
-    // MARK: - Registration and Login (Not needed for anonymous token flow)
-    /*
-    func register(username: String, password: String, completion: @escaping (Bool) -> Void) {
+   
+    func register(completion: @escaping (Bool) -> Void) {
         guard let url = URL(string: "https://crowdsense-9jqz.onrender.com/register/") else {
             completion(false)
             return
         }
-        // Prepare the JSON body with username and password, etc.
-    }
-    
-    func login(username: String, password: String, completion: @escaping (Bool) -> Void) {
-        guard let url = URL(string: "https://crowdsense-9jqz.onrender.com/api-token-auth/") else {
+
+        guard let token = getAnonymousToken() else {
+            print("Failed to retrieve anonymous token.")
             completion(false)
             return
         }
-        // JSON body, send login request, and handle token storage...
-    }
-    
-    func updateUserEmail(newEmail: String, completion: @escaping (Bool) -> Void) {
-        // Function for updating user email.
-    }
-    
-    func fetchEmail(completion: @escaping (String?) -> Void) {
-        // Function for fetching user email.
-    }
-    */
 
-    // MARK: - Anonymous Token Support
+        let bodyDict: [String: Any] = ["user": token]
+        guard let bodyData = try? JSONSerialization.data(withJSONObject: bodyDict, options: []) else {
+            completion(false)
+            return
+        }
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = bodyData
+
+        URLSession.shared.dataTask(with: request) { data, response, error in
+            if let error = error {
+                print("Registration error:", error)
+                completion(false)
+                return
+            }
+
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 201 {
+                print("Registration successful with token:", token)
+                completion(true)
+            } else {
+                print("Registration failed, response:", response ?? "No response")
+                completion(false)
+            }
+        }.resume()
+    }
 
     /// Returns an anonymous token.
     /// If a token already exists, it returns that token.
