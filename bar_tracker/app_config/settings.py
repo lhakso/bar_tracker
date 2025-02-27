@@ -33,8 +33,8 @@ if SECRET_KEY == "unsafe-secret-key":
     )
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=False, cast=bool)
-USE_TZ = True
 TIME_ZONE = "US/Eastern"
+USE_TZ = True
 
 CORS_ALLOW_ALL_ORIGINS = config("CORS_ALLOW_ALL_ORIGINS", default=False, cast=bool)
 
