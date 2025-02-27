@@ -208,6 +208,7 @@ def is_user_near_bar(request):
 
     profile, created = UserProfile.objects.get_or_create(user=user)
     profile.is_near_bar = bool(request.data.get("is_near_bar"))
+    profile.last_updated_location = now()
     profile.save()
     return Response(
         {"message": "is_near_bar updated successfully"}, status=status.HTTP_200_OK

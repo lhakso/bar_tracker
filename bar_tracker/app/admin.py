@@ -14,7 +14,7 @@ class UserProfileAdmin(admin.ModelAdmin):
         "is_near_bar",
         "strikes",
         "submissions",
-        "is_near_bar"
+        "last_updated_location",
     )
     search_fields = ("user__username",)
 
