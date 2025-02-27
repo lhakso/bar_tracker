@@ -8,6 +8,7 @@
 import Foundation
 
 struct APIService {
+    static let shared = APIService()
     private let baseURL = "https://crowdsense-9jqz.onrender.com/"
 
     // Fetch bar data

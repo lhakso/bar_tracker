@@ -16,6 +16,12 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
            manager.desiredAccuracy = kCLLocationAccuracyBest
            manager.startUpdatingLocation()
        }
+    
+    func startSignificantLocationMonitoring() {
+        if CLLocationManager.significantLocationChangeMonitoringAvailable() {
+            manager.startMonitoringSignificantLocationChanges()
+        }
+    }
 
        func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
            switch manager.authorizationStatus {
@@ -24,6 +30,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                manager.requestAlwaysAuthorization()  // request always after while using
            case .authorizedAlways:
                print("Granted Always Allow")
+               startSignificantLocationMonitoring()
            case .denied, .restricted:
                print("Location access denied")
            case .notDetermined:
@@ -41,6 +48,16 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newLocation = locations.last else { return }
         lastLocation = newLocation
+        let latitude = newLocation.coordinate.latitude
+        let longitude = newLocation.coordinate.longitude
+        APIService.shared.submitLocation(latitude:latitude, longitude:longitude){ result in
+            switch result {
+            case .success(let success):
+                print("Location submission successful: \(success)")
+            case .failure(let error):
+                print("Location submission failed: \(error.localizedDescription)")
+            }
+        }
         locationRequestCompletion?(newLocation)
         locationRequestCompletion = nil
     }
