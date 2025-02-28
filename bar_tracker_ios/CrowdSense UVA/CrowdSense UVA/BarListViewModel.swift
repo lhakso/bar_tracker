@@ -22,7 +22,7 @@ class BarListViewModel: ObservableObject {
                 let decoder = JSONDecoder()
                 let decodedBars = try decoder.decode([Bar].self, from: data)
                 DispatchQueue.main.async {
-                    self.bars = decodedBars.filter { $0.isActive }
+                    self.bars = decodedBars.filter { $0.isActive }.sorted { $0.id < $1.id }
                 }
             } catch {
                 print("Error decoding JSON: \(error.localizedDescription)")
