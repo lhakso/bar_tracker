@@ -16,11 +16,14 @@ class KeychainHelper {
     /// Save data to Keychain
     func save(_ data: Data, service: String, account: String) -> Bool {
         // Create query
+        print("saved data to keychain, service: \(service), account: \(account)")
         let query: [String: Any] = [
             kSecClass as String       : kSecClassGenericPassword,
             kSecAttrService as String : service,
             kSecAttrAccount as String : account,
-            kSecValueData as String   : data
+            kSecValueData as String   : data,
+            // Set accessibility to ensure the token is available after the first unlock
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
         ]
         
         // Add to Keychain
@@ -32,6 +35,7 @@ class KeychainHelper {
     /// Retrieve data from Keychain
     func retrieve(service: String, account: String) -> Data? {
         // Create query
+        print("retrieving data from keychain, service: \(service), account: \(account)")
         let query: [String: Any] = [
             kSecClass as String       : kSecClassGenericPassword,
             kSecAttrService as String : service,
@@ -51,6 +55,7 @@ class KeychainHelper {
     
     /// Delete data from Keychain
     func delete(service: String, account: String) -> Bool {
+        print("DELETED FROM KEYCHAIN, SERVICE: \(service), ACCOUNT: \(account)")
         // Create query
         let query: [String: Any] = [
             kSecClass as String       : kSecClassGenericPassword,

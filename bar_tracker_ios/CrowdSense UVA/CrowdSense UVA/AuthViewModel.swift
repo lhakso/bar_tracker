@@ -15,6 +15,7 @@ class AuthViewModel: ObservableObject {
     
     init() {
         if let token = AuthService.shared.getAnonymousToken() {
+            print("ran get anon token from authviewmodel, token is: \(token)")
             self.user = token
             // Call register to ensure the backend has this user registered.
             // This will either create a new user or do nothing if the user already exists.
