@@ -92,6 +92,9 @@ def get_bars(request):
 
     bar_data = []
     for bar in bars:
+        bar.displayed_current_occupancy, bar.displayed_current_line = (
+                calculate_displayed_values(bar)
+            )
         bar_info = {
             "id": bar.id,
             "name": bar.name,
