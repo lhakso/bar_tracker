@@ -23,6 +23,10 @@ class BarListViewModel: ObservableObject {
                 let decodedBars = try decoder.decode([Bar].self, from: data)
                 DispatchQueue.main.async {
                     self.bars = decodedBars.filter { $0.isActive }.sorted { $0.id < $1.id }
+                    let newBarLocations = self.bars.map { bar in
+                        BarLocation(id: bar.id, latitude: Float(bar.latitude), longitude: Float(bar.longitude))
+                    }
+                    BarLocationDataStore.shared.save(locations: newBarLocations)
                 }
             } catch {
                 print("Error decoding JSON: \(error.localizedDescription)")

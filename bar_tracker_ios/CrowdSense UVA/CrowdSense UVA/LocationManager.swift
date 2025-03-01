@@ -5,7 +5,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
     static let shared = LocationManager()
     @Published var lastLocation: CLLocation?
-    @Published var userIsNearBar: Bool = false
+    @Published var userIsNearBar: Int? = nil
     
     private var locationRequestCompletion: ((CLLocation?) -> Void)?
 
@@ -48,16 +48,21 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newLocation = locations.last else { return }
         lastLocation = newLocation
-        let latitude = newLocation.coordinate.latitude
-        let longitude = newLocation.coordinate.longitude
-        APIService.shared.submitLocation(latitude:latitude, longitude:longitude){ result in
-            switch result {
-            case .success(let success):
-                print("Location submission successful: \(success)")
-            case .failure(let error):
-                print("Location submission failed: \(error.localizedDescription)")
+        if let storedLocations = BarLocationDataStore.shared.load(), !storedLocations.isEmpty {
+            updateProximityToAnyBar(locations: storedLocations) { [weak self] nearBarId in
+                DispatchQueue.main.async {
+                    self?.userIsNearBar = nearBarId
+                }
+                if let barId = nearBarId {
+                    print("User is near bar with id: \(barId)")
+                } else {
+                    print("User is not near any bar.")
+                }
             }
+        } else {
+            print("No bar locations available for proximity check.")
         }
+
         locationRequestCompletion?(newLocation)
         locationRequestCompletion = nil
     }
@@ -68,49 +73,72 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         locationRequestCompletion = nil
     }
     
-    private func computeProximity(for bar: Bar, with location: CLLocation, threshHoldMiles: Double) -> Bool {
-        let barLocation = CLLocation(latitude: bar.latitude, longitude: bar.longitude)
-        let distanceInMiles = location.distance(from: barLocation) / 1609.34
-        return distanceInMiles <= threshHoldMiles
+    private func computeProximity(for barLocation: BarLocation, with location: CLLocation, thresholdMiles: Double) -> Bool {
+        let barCLLocation = CLLocation(latitude: CLLocationDegrees(barLocation.latitude),
+                                       longitude: CLLocationDegrees(barLocation.longitude))
+        let distanceInMiles = location.distance(from: barCLLocation) / 1609.34
+        return distanceInMiles <= thresholdMiles
     }
     
-    func checkAndUpdateUserProximity(threshHoldMiles: Double = 5.03, bar: Bar, completion: @escaping (Bool) -> Void) {
-            // if have a lastLocation use it
-            if let location = lastLocation {
-                let isNear = computeProximity(for: bar, with: location, threshHoldMiles: threshHoldMiles)
-                updateUserIsNearBar(isNearBar: isNear)
-                DispatchQueue.main.async { self.userIsNearBar = isNear }
-                completion(isNear)
-            } else {
-                // else request a location update and then perform the check
-                requestLocation { [weak self] newLocation in
-                    guard let self = self, let location = newLocation else {
-                        completion(false)
-                        return
-                    }
-                    self.lastLocation = location  // update the stored location
-                    let isNear = self.computeProximity(for: bar, with: location, threshHoldMiles: threshHoldMiles)
-                    self.updateUserIsNearBar(isNearBar: isNear)
-                    DispatchQueue.main.async { self.userIsNearBar = isNear }
-                    completion(isNear)
-                }
-            }
-        }
-    
-    func updateUserIsNearBar(isNearBar: Bool) {
-            let body: [String: Any] = ["is_near_bar": isNearBar]
-
-        AuthService.shared.makeAuthenticatedRequest(endpoint: "/is_near_bar/", method: "POST", body: body) { data, response, error in
-                if let error = error {
-                    print("Error updating is_near_bar: \(error)")
+    func checkAndUpdateUserProximity(barLocation: BarLocation, thresholdMiles: Double = 5.03, completion: @escaping (Bool) -> Void) {
+        if let location = lastLocation {
+            let isNear = computeProximity(for: barLocation, with: location, thresholdMiles: thresholdMiles)
+            completion(isNear)
+        } else {
+            requestLocation { [weak self] newLocation in
+                guard let self = self, let location = newLocation else {
+                    completion(false)
                     return
                 }
-                if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                    print("Successfully updated is_near_bar")
-                } else {
-                    print("Failed to update is_near_bar")
-                }
+                self.lastLocation = location
+                let isNear = self.computeProximity(for: barLocation, with: location, thresholdMiles: thresholdMiles)
+                completion(isNear)
             }
         }
+    }
+    
+    func updateProximityToAnyBar(locations: [BarLocation], completion: @escaping (Int?) -> Void) {
+        let group = DispatchGroup()
+        var nearBarId: Int? = nil
+
+        for barLocation in locations {
+            group.enter()
+            checkAndUpdateUserProximity(barLocation: barLocation) { isNear in
+                if isNear && nearBarId == nil {
+                    nearBarId = barLocation.id
+                }
+                group.leave()
+            }
+        }
+
+        group.notify(queue: .main) {
+            completion(nearBarId)
+        }
+    }
+
+
+    
+    func updateUserIsNearBar(nearBarId: Int?) {
+        var body: [String: Any] = [:]
+        
+        // If nearBarId is not nil, add it to the body; otherwise, send NSNull()
+        if let barId = nearBarId {
+            body["near_bar_id"] = barId
+        } else {
+            body["near_bar_id"] = NSNull() // Or you could omit the key entirely if that makes more sense.
+        }
+        
+        AuthService.shared.makeAuthenticatedRequest(endpoint: "/is_near_bar/", method: "POST", body: body) { data, response, error in
+            if let error = error {
+                print("Error updating near_bar_id: \(error)")
+                return
+            }
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                print("Successfully updated near_bar_id")
+            } else {
+                print("Failed to update near_bar_id")
+            }
+        }
+    }
 
 }

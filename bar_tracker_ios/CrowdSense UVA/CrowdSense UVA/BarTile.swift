@@ -107,30 +107,35 @@ struct BarTile: View {
                         withAnimation { onExpand(-1) }
                         
                         // Check proximity asynchronously
-                        LocationManager.shared.checkAndUpdateUserProximity(bar: expandedBar) { isNear in
-                            print("User near bar?: \(isNear)")
-                            guard isNear else {
-                                print("User is not near the bar – submission aborted.")
-                                // Collapse the panel with animation even if submission is aborted
-                                withAnimation { onExpand(-1) }
-                                return
-                            }
-                            
-                            print("User is near bar – proceeding with submission.")
-                            viewModel.submitOccupancy(
-                                barId: String(bar.id),
-                                occupancy: Int(occupancy),
-                                lineWait: Int(round(lineWait / 6.0)), // Mapping 0-60 -> 0-10
-                                //user: authVM.user,                     // Using the environment object
-                                locationManager: locationManager,
-                                completion: { success in
-                                    // Handle the submission result if needed
-                                    print("Occupancy submission success: \(success)")
+                        if let barLocation = BarLocationDataStore.shared.load()?.first(where: { $0.id == expandedBar.id }) {
+                            LocationManager.shared.checkAndUpdateUserProximity(barLocation: barLocation) { isNear in
+                                print("User near bar?: \(isNear)")
+                                guard isNear else {
+                                    print("User is not near the bar – submission aborted.")
+                                    // Collapse the panel with animation even if submission is aborted
+                                    withAnimation { onExpand(-1) }
+                                    return
                                 }
-                            )
-                            
-                            // Collapse the panel with animation after submission
+                                
+                                print("User is near bar – proceeding with submission.")
+                                viewModel.submitOccupancy(
+                                    barId: String(expandedBar.id),
+                                    occupancy: Int(occupancy),
+                                    lineWait: Int(round(lineWait / 6.0)), // Mapping 0-60 -> 0-10
+                                    locationManager: locationManager,
+                                    completion: { success in
+                                        // Handle the submission result if needed
+                                        print("Occupancy submission success: \(success)")
+                                    }
+                                )
+                                
+                                // Collapse the panel with animation after submission if needed.
+                            }
+                        } else {
+                            print("No matching BarLocation found for bar id: \(expandedBar.id)")
+                            withAnimation { onExpand(-1) }
                         }
+
                     }) {
                         Text("Submit")
                             .foregroundColor(.white)

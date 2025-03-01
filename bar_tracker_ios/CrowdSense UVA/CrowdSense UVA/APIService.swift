@@ -8,7 +8,6 @@
 import Foundation
 
 struct APIService {
-    static let shared = APIService()
     private let baseURL = "https://crowdsense-9jqz.onrender.com/"
 
     // Fetch bar data
@@ -31,6 +30,7 @@ struct APIService {
     }
 
     // Submit occupancy data
+    static let shared = APIService()
     func submitOccupancy(barId: Int, occupancy: Int, lineWait: Int, completion: @escaping (Result<Bool, Error>) -> Void) {
         guard let url = URL(string: baseURL + "submit_occupancy/") else { return }
         
@@ -65,6 +65,7 @@ struct APIService {
 
 
     // Submit location data
+    /*
     func submitLocation(latitude: Double, longitude: Double, completion: @escaping (Result<Bool, Error>) -> Void) {
         guard let url = URL(string: baseURL + "get_location/") else { return }
         
@@ -87,4 +88,5 @@ struct APIService {
             completion(.success(true))
         }.resume()
     }
+    */
 }

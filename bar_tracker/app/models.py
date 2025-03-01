@@ -46,7 +46,7 @@ class UserProfile(models.Model):
     email = models.EmailField(unique=True, null=True, blank=True)
     submissions = models.IntegerField(default=0)
     strikes = models.IntegerField(default=0)
-    is_near_bar = models.BooleanField(blank=True, default=False)
+    is_near_bar = models.IntegerField(null=True, default=None)
     last_updated_location = models.DateTimeField(null=True, blank=True)
 
     def increment_strikes(self):
