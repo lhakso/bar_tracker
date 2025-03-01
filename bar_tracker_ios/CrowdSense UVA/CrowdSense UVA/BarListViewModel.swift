@@ -36,50 +36,26 @@ class BarListViewModel: ObservableObject {
 
     // Submit occupancy data to the backend
     func submitOccupancy(
-        barId: String,
+        barId: Int,
         occupancy: Int,
         lineWait: Int,
-        //user: String,
-        locationManager: LocationManager,
         completion: @escaping (Bool) -> Void
     ) {
-        // Prepare the endpoint and payload
-        let endpoint = "/submit_occupancy/"
-        let payload: [String: Any] = [
-            "bar_id": barId,
-            //"user": user,
-            "occupancy_level": occupancy,
-            "line_wait": lineWait
-        ]
-        print("Submitting payload: \(payload)")
-
-        AuthService.shared.makeAuthenticatedRequest(endpoint: endpoint, method: "POST", body: payload) { data, response, error in
-            if let error = error {
-                print("Error submitting occupancy: \(error.localizedDescription)")
-                completion(false)
-                return
-            }
-
-            guard let httpResponse = response as? HTTPURLResponse else {
-                print("No valid response received.")
-                completion(false)
-                return
-            }
-
-            if httpResponse.statusCode == 200 {
-                // fetch updated bars on the main thread
-                DispatchQueue.main.async {
+        APIService.shared.submitOccupancy(barId: barId, occupancy: occupancy, lineWait: lineWait) { result in
+            DispatchQueue.main.async {
+                switch result {
+                case .success(let success):
+                    // Optionally refresh bar data
                     self.fetchBars()
+                    completion(success)
+                case .failure(let error):
+                    print("Failed to submit occupancy: \(error.localizedDescription)")
+                    completion(false)
                 }
-                completion(true)
-            } else {
-                print("Failed to submit occupancy. Status code: \(httpResponse.statusCode)")
-                completion(false)
             }
         }
     }
 }
-
 // Location structure to decode the response from get-bar API
 struct Location: Decodable {
     let latitude: Double

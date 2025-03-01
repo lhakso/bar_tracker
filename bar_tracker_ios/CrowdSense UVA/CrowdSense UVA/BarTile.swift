@@ -119,10 +119,9 @@ struct BarTile: View {
                                 
                                 print("User is near bar – proceeding with submission.")
                                 viewModel.submitOccupancy(
-                                    barId: String(expandedBar.id),
+                                    barId: expandedBar.id,
                                     occupancy: Int(occupancy),
                                     lineWait: Int(round(lineWait / 6.0)), // Mapping 0-60 -> 0-10
-                                    locationManager: locationManager,
                                     completion: { success in
                                         // Handle the submission result if needed
                                         print("Occupancy submission success: \(success)")
