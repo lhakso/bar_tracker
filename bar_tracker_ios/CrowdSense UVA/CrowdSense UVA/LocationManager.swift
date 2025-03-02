@@ -30,7 +30,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                manager.requestAlwaysAuthorization()  // request always after while using
            case .authorizedAlways:
                print("Granted Always Allow")
-               startSignificantLocationMonitoring()
+               //startSignificantLocationMonitoring()
            case .denied, .restricted:
                print("Location access denied")
            case .notDetermined:
@@ -52,6 +52,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             updateProximityToAnyBar(locations: storedLocations) { [weak self] nearBarId in
                 DispatchQueue.main.async {
                     self?.userIsNearBar = nearBarId
+                    self?.updateUserIsNearBar(nearBarId:nearBarId)
                 }
                 if let barId = nearBarId {
                     print("User is near bar with id: \(barId)")
@@ -132,6 +133,12 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             if let error = error {
                 print("Error updating near_bar_id: \(error)")
                 return
+            }
+            if let httpResponse = response as? HTTPURLResponse {
+                print("HTTP Status Code: \(httpResponse.statusCode)")
+            }
+            if let data = data, let responseString = String(data: data, encoding: .utf8) {
+                print("Response Data: \(responseString)")
             }
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
                 print("Successfully updated near_bar_id")

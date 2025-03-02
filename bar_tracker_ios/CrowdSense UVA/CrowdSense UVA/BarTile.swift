@@ -25,9 +25,9 @@ struct BarTile: View {
             // If not expanded, show the "Submit Report" button
             if !isExpanded {
                 HStack {
-                    Text("Occupancy: \(bar.currentOccupancy.map { String($0) } ?? "No data")")
+                    Text("Occupancy: \(bar.currentOccupancy.map { String($0) } ?? "No Data")")
                     Spacer()
-                    Text("Line Wait: \(bar.currentLineWait.map { "\($0) mins" } ?? "No data")")
+                    Text("Line Wait: \(bar.currentLineWait.map { "\($0) mins" } ?? "No Data")")
                 }
                 .foregroundColor(.white.opacity(0.85))
 
