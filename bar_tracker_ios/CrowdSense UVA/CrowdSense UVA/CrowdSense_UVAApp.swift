@@ -9,6 +9,7 @@ import SwiftUI
 
 @main
 struct CrowdSense_UVAApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     @StateObject private var authVM = AuthViewModel()
     @StateObject private var locationManager = LocationManager()
     @StateObject private var barListViewModel = BarListViewModel()

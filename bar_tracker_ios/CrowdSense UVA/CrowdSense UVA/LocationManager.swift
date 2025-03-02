@@ -8,51 +8,70 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var userIsNearBar: Int? = nil
     
     private var locationRequestCompletion: ((CLLocation?) -> Void)?
-
     
     override init() {
-           super.init()
-           manager.delegate = self
-           manager.desiredAccuracy = kCLLocationAccuracyBest
-           manager.startUpdatingLocation()
-       }
+        super.init()
+        manager.delegate = self
+        manager.desiredAccuracy = kCLLocationAccuracyBest
+        
+        // Request permissions when initialized
+        manager.requestWhenInUseAuthorization()
+    }
     
     func startSignificantLocationMonitoring() {
         if CLLocationManager.significantLocationChangeMonitoringAvailable() {
             manager.startMonitoringSignificantLocationChanges()
+            print("Started significant location monitoring")
         }
     }
-
-       func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-           switch manager.authorizationStatus {
-           case .authorizedWhenInUse:
-               print("Granted 'While Using', now requesting 'Always Allow'")
-               manager.requestAlwaysAuthorization()  // request always after while using
-           case .authorizedAlways:
-               print("Granted Always Allow")
-               //startSignificantLocationMonitoring()
-           case .denied, .restricted:
-               print("Location access denied")
-           case .notDetermined:
-               print("Location permission not requested yet")
-           @unknown default:
-               break
-           }
-       }
-
+    
+    func startLocationServices() {
+        // Allow the app to receive location updates in the background
+        manager.allowsBackgroundLocationUpdates = true
+        
+        // Start regular location updates
+        manager.startUpdatingLocation()
+        print("Started regular location updates with background capability")
+        
+        // Add significant location monitoring for background wake-ups
+        startSignificantLocationMonitoring()
+        
+        // Optional: allow system to pause updates when stationary to save battery
+        manager.pausesLocationUpdatesAutomatically = true
+    }
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        switch manager.authorizationStatus {
+        case .authorizedWhenInUse:
+            print("Granted 'While Using', now requesting 'Always Allow'")
+            manager.requestAlwaysAuthorization()  // request always after while using
+        case .authorizedAlways:
+            print("Granted Always Allow")
+            startLocationServices()  // Start all location services once we have "Always" permission
+        case .denied, .restricted:
+            print("Location access denied")
+        case .notDetermined:
+            print("Location permission not requested yet")
+        @unknown default:
+            break
+        }
+    }
+    
     func requestLocation(completion: @escaping (CLLocation?) -> Void) {
         self.locationRequestCompletion = completion
         manager.requestLocation()
     }
-
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newLocation = locations.last else { return }
         lastLocation = newLocation
+        print("Location updated: \(newLocation.coordinate.latitude), \(newLocation.coordinate.longitude)")
+        
         if let storedLocations = BarLocationDataStore.shared.load(), !storedLocations.isEmpty {
             updateProximityToAnyBar(locations: storedLocations) { [weak self] nearBarId in
                 DispatchQueue.main.async {
                     self?.userIsNearBar = nearBarId
-                    self?.updateUserIsNearBar(nearBarId:nearBarId)
+                    self?.updateUserIsNearBar(nearBarId: nearBarId)
                 }
                 if let barId = nearBarId {
                     print("User is near bar with id: \(barId)")
@@ -63,11 +82,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         } else {
             print("No bar locations available for proximity check.")
         }
-
+        
         locationRequestCompletion?(newLocation)
         locationRequestCompletion = nil
     }
-
+    
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Location manager error: \(error.localizedDescription)")
         locationRequestCompletion?(nil)
@@ -81,7 +100,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         return distanceInMiles <= thresholdMiles
     }
     
-    func checkAndUpdateUserProximity(barLocation: BarLocation, thresholdMiles: Double = 5.03, completion: @escaping (Bool) -> Void) {
+    func checkAndUpdateUserProximity(barLocation: BarLocation, thresholdMiles: Double = 0.03, completion: @escaping (Bool) -> Void) {
         if let location = lastLocation {
             let isNear = computeProximity(for: barLocation, with: location, thresholdMiles: thresholdMiles)
             completion(isNear)
@@ -101,7 +120,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func updateProximityToAnyBar(locations: [BarLocation], completion: @escaping (Int?) -> Void) {
         let group = DispatchGroup()
         var nearBarId: Int? = nil
-
+        
         for barLocation in locations {
             group.enter()
             checkAndUpdateUserProximity(barLocation: barLocation) { isNear in
@@ -111,13 +130,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                 group.leave()
             }
         }
-
+        
         group.notify(queue: .main) {
             completion(nearBarId)
         }
     }
-
-
     
     func updateUserIsNearBar(nearBarId: Int?) {
         var body: [String: Any] = [:]
@@ -134,12 +151,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                 print("Error updating near_bar_id: \(error)")
                 return
             }
-            if let httpResponse = response as? HTTPURLResponse {
-                print("HTTP Status Code: \(httpResponse.statusCode)")
-            }
-            if let data = data, let responseString = String(data: data, encoding: .utf8) {
-                print("Response Data: \(responseString)")
-            }
             if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
                 print("Successfully updated near_bar_id")
             } else {
@@ -147,5 +158,4 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             }
         }
     }
-
 }
