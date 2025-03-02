@@ -33,7 +33,6 @@ class BarListViewModel: ObservableObject {
             }
         }
     }
-
     // Submit occupancy data to the backend
     func submitOccupancy(
         barId: Int,
