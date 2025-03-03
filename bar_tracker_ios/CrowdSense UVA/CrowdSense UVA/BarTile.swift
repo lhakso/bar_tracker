@@ -108,7 +108,7 @@ struct BarTile: View {
                         
                         // Check proximity asynchronously
                         if let barLocation = BarLocationDataStore.shared.load()?.first(where: { $0.id == expandedBar.id }) {
-                            LocationManager.shared.checkAndUpdateUserProximity(barLocation: barLocation) { isNear in
+                            LocationManager.shared.checkUserProximityForSubmission(barLocation: barLocation) { isNear in
                                 print("User near bar?: \(isNear)")
                                 guard isNear else {
                                     print("User is not near the bar – submission aborted.")

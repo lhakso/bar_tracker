@@ -6,6 +6,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = LocationManager()
     @Published var lastLocation: CLLocation?
     @Published var userIsNearBar: Int? = nil
+    private var isUsingPreciseLocationUpdates = false
+    
+    // Define the rough boundary of the bar district
+    private let barAreaCenter = CLLocation(latitude: 38.03519157104836, longitude: -78.50011168821909) // Adjust to Corner/UVA bar area
+    private let barAreaRadius = 0.4 // miles (broad area containing all bars)
     
     private var locationRequestCompletion: ((CLLocation?) -> Void)?
     
@@ -13,8 +18,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         super.init()
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
-        
-        // Request permissions when initialized
         manager.requestWhenInUseAuthorization()
     }
     
@@ -26,28 +29,49 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func startLocationServices() {
-        // Allow the app to receive location updates in the background
+        // Configure for background updates
         manager.allowsBackgroundLocationUpdates = true
-        
-        // Start regular location updates
-        manager.startUpdatingLocation()
-        print("Started regular location updates with background capability")
-        
-        // Add significant location monitoring for background wake-ups
-        startSignificantLocationMonitoring()
-        
-        // Optional: allow system to pause updates when stationary to save battery
         manager.pausesLocationUpdatesAutomatically = true
+        
+        // Always start with SLC as the base monitoring
+        startSignificantLocationMonitoring()
+        print("Location services configured with SLC baseline monitoring")
+    }
+    
+    // Check if user is in the general bar area
+    private func isInBarArea(_ location: CLLocation) -> Bool {
+        let distanceInMiles = location.distance(from: barAreaCenter) / 1609.34
+        return distanceInMiles <= barAreaRadius
+    }
+    
+    // Handle switching between monitoring types
+    private func adjustLocationPrecision(for location: CLLocation) {
+        let inBarArea = isInBarArea(location)
+        
+        if inBarArea && !isUsingPreciseLocationUpdates {
+            // Switch to precise updates when entering bar area
+            manager.desiredAccuracy = kCLLocationAccuracyBest
+            manager.distanceFilter = 10 // meters
+            manager.startUpdatingLocation()
+            isUsingPreciseLocationUpdates = true
+            print("⚠️ Switched to precise location tracking in bar area")
+        }
+        else if !inBarArea && isUsingPreciseLocationUpdates {
+            // Switch back to SLC when leaving bar area
+            manager.stopUpdatingLocation()
+            isUsingPreciseLocationUpdates = false
+            print("↓ Reverted to SLC outside bar area")
+        }
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
         switch manager.authorizationStatus {
         case .authorizedWhenInUse:
             print("Granted 'While Using', now requesting 'Always Allow'")
-            manager.requestAlwaysAuthorization()  // request always after while using
+            manager.requestAlwaysAuthorization()
         case .authorizedAlways:
             print("Granted Always Allow")
-            startLocationServices()  // Start all location services once we have "Always" permission
+            startLocationServices()
         case .denied, .restricted:
             print("Location access denied")
         case .notDetermined:
@@ -67,23 +91,19 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         lastLocation = newLocation
         print("Location updated: \(newLocation.coordinate.latitude), \(newLocation.coordinate.longitude)")
         
-        // First check if we have a valid token before proceeding
+        // Adjust precision based on location
+        adjustLocationPrecision(for: newLocation)
+        
+        // Check for token and process bar proximity
         guard let token = AuthService.shared.getAnonymousToken() else {
-            print("WARNING: No valid auth token available for background location update")
-            // Don't attempt the API call without a token
+            print("WARNING: No valid auth token available for location update")
             return
         }
-        print("Valid token available for background location update: \(token.prefix(6))...")
         
         if let storedLocations = BarLocationDataStore.shared.load(), !storedLocations.isEmpty {
             updateProximityToAnyBar(locations: storedLocations) { [weak self] nearBarId in
                 DispatchQueue.main.async {
                     self?.userIsNearBar = nearBarId
-                    
-                    // Log the near_bar_id value before the API call
-                    print("About to update near_bar_id: \(nearBarId ?? -100)")
-                    
-                    // Only make the API call if we have a valid token
                     self?.updateUserIsNearBar(nearBarId: nearBarId)
                 }
                 if let barId = nearBarId {
@@ -113,7 +133,25 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         return distanceInMiles <= thresholdMiles
     }
     
-    func checkAndUpdateUserProximity(barLocation: BarLocation, thresholdMiles: Double = 0.03, completion: @escaping (Bool) -> Void) {
+   //current threshold miles is 30ft
+    func checkAndUpdateUserProximity(barLocation: BarLocation, thresholdMiles: Double = 0.01, completion: @escaping (Bool) -> Void) {
+        if let location = lastLocation {
+            let isNear = computeProximity(for: barLocation, with: location, thresholdMiles: thresholdMiles)
+            completion(isNear)
+        } else {
+            requestLocation { [weak self] newLocation in
+                guard let self = self, let location = newLocation else {
+                    completion(false)
+                    return
+                }
+                self.lastLocation = location
+                let isNear = self.computeProximity(for: barLocation, with: location, thresholdMiles: thresholdMiles)
+                completion(isNear)
+            }
+        }
+    }
+    
+    func checkUserProximityForSubmission(barLocation: BarLocation, thresholdMiles: Double = 0.03, completion: @escaping (Bool) -> Void) {
         if let location = lastLocation {
             let isNear = computeProximity(for: barLocation, with: location, thresholdMiles: thresholdMiles)
             completion(isNear)

@@ -63,19 +63,6 @@ class AuthService {
             }
         }.resume()
     }
-    func migrateToken() {
-        if let oldToken = getToken() {
-            print("Found existing token, migrating with new keychain attributes")
-            // Delete the old token
-            KeychainHelper.shared.delete(service: service, account: account)
-            
-            // Save it with the correct accessibility
-            if let tokenData = oldToken.data(using: .utf8) {
-                let success = KeychainHelper.shared.save(tokenData, service: service, account: account)
-                print("Token migration result: \(success ? "Success" : "Failed")")
-            }
-        }
-    }
     /// Returns an anonymous token.
     /// If a token already exists, it returns that token.
     /// Otherwise, it generates a new token, saves it, and returns it.
@@ -130,7 +117,7 @@ class AuthService {
 
         // Attach token if we have it.
         if let token = getToken() {
-            request.setValue("Token \(token)", forHTTPHeaderField: "Authorization")
+            request.setValue("\(token)",forHTTPHeaderField: "Authorization")
         }
 
         if let body = body {
