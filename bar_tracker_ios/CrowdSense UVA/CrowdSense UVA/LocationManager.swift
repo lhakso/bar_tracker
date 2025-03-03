@@ -67,10 +67,23 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         lastLocation = newLocation
         print("Location updated: \(newLocation.coordinate.latitude), \(newLocation.coordinate.longitude)")
         
+        // First check if we have a valid token before proceeding
+        guard let token = AuthService.shared.getAnonymousToken() else {
+            print("WARNING: No valid auth token available for background location update")
+            // Don't attempt the API call without a token
+            return
+        }
+        print("Valid token available for background location update: \(token.prefix(6))...")
+        
         if let storedLocations = BarLocationDataStore.shared.load(), !storedLocations.isEmpty {
             updateProximityToAnyBar(locations: storedLocations) { [weak self] nearBarId in
                 DispatchQueue.main.async {
                     self?.userIsNearBar = nearBarId
+                    
+                    // Log the near_bar_id value before the API call
+                    print("About to update near_bar_id: \(nearBarId ?? -100)")
+                    
+                    // Only make the API call if we have a valid token
                     self?.updateUserIsNearBar(nearBarId: nearBarId)
                 }
                 if let barId = nearBarId {
@@ -140,12 +153,17 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         var body: [String: Any] = [:]
         
         // If nearBarId is not nil, add it to the body; otherwise, send NSNull()
+        print("nearBarId: \(nearBarId ?? -100)")
         if let barId = nearBarId {
             body["near_bar_id"] = barId
+            print("Setting near_bar_id to \(barId)")
         } else {
-            body["near_bar_id"] = -1 // Or you could omit the key entirely if that makes more sense.
+            body["near_bar_id"] = -1
+            print("Setting near_bar_id to -1")
         }
-        print("near bar id: \(body["near_bar_id"] ?? NSNull())")
+
+        // RIGHT BEFORE the request is sent
+        print("FINAL REQUEST BODY: \(body)")
         AuthService.shared.makeAuthenticatedRequest(endpoint: "/is_near_bar/", method: "POST", body: body) { data, response, error in
             if let error = error {
                 print("Error updating near_bar_id: \(error)")
