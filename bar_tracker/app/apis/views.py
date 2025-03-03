@@ -210,10 +210,12 @@ def is_user_near_bar(request):
     user, error_response = get_user_from_request(request)
 
     profile, created = UserProfile.objects.get_or_create(user=user)
-
     near_bar_id = request.data.get("near_bar_id")
-
-    profile.is_near_bar = int(near_bar_id)
+    print(f"NEAR BAR ID: {near_bar_id}")
+    if near_bar_id is not None:
+        profile.is_near_bar = int(near_bar_id)
+    else:
+        profile.is_near_bar = -1
 
     profile.last_updated_location = now()
     profile.save()

@@ -145,7 +145,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         } else {
             body["near_bar_id"] = -1 // Or you could omit the key entirely if that makes more sense.
         }
-        
+        print("near bar id: \(body["near_bar_id"] ?? NSNull())")
         AuthService.shared.makeAuthenticatedRequest(endpoint: "/is_near_bar/", method: "POST", body: body) { data, response, error in
             if let error = error {
                 print("Error updating near_bar_id: \(error)")
