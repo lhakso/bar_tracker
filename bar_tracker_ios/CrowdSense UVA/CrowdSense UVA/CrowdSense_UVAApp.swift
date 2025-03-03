@@ -13,7 +13,10 @@ struct CrowdSense_UVAApp: App {
     @StateObject private var authVM = AuthViewModel()
     @StateObject private var locationManager = LocationManager()
     @StateObject private var barListViewModel = BarListViewModel()
-    
+    init() {
+        // Perform the migration during initialization
+        AuthService.shared.migrateToken()
+    }
     var body: some Scene {
         WindowGroup {
             if authVM.isAuthenticated {

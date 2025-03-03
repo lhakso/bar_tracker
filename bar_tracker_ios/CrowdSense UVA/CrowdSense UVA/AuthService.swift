@@ -63,22 +63,33 @@ class AuthService {
             }
         }.resume()
     }
-
+    func migrateToken() {
+        if let oldToken = getToken() {
+            print("Found existing token, migrating with new keychain attributes")
+            // Delete the old token
+            KeychainHelper.shared.delete(service: service, account: account)
+            
+            // Save it with the correct accessibility
+            if let tokenData = oldToken.data(using: .utf8) {
+                let success = KeychainHelper.shared.save(tokenData, service: service, account: account)
+                print("Token migration result: \(success ? "Success" : "Failed")")
+            }
+        }
+    }
     /// Returns an anonymous token.
     /// If a token already exists, it returns that token.
     /// Otherwise, it generates a new token, saves it, and returns it.
     func getAnonymousToken() -> String? {
+        // Try to get existing token
         if let token = getToken() {
             return token
-        } else {
-            let token = UUID().uuidString
-            guard let tokenData = token.data(using: .utf8) else { return nil }
-            let saved = KeychainHelper.shared.save(tokenData, service: service, account: account)
-            if saved {
-                return token
-            }
-            return nil
         }
+        
+        // Create a new token (avoid calling this from background processes)
+        let token = UUID().uuidString
+        guard let tokenData = token.data(using: .utf8) else { return nil }
+        let saved = KeychainHelper.shared.save(tokenData, service: service, account: account)
+        return saved ? token : nil
     }
     
     /// Checks whether a token exists (i.e., if the user is "logged in" anonymously).
@@ -91,12 +102,15 @@ class AuthService {
         let _ = KeychainHelper.shared.delete(service: service, account: account)
     }
     
-    /// Retrieves the token from Keychain if it exists.
-    private func getToken() -> String? {
+    // In AuthService.swift, make getToken public and consistent:
+    func getToken() -> String? {
+        print("Attempting to retrieve token for background request")
         if let tokenData = KeychainHelper.shared.retrieve(service: service, account: account),
            let token = String(data: tokenData, encoding: .utf8) {
+            print("Successfully retrieved token: \(token.prefix(8))...")
             return token
         }
+        print("❌ Failed to retrieve token from keychain")
         return nil
     }
     

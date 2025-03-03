@@ -34,8 +34,7 @@ class KeychainHelper {
     
     /// Retrieve data from Keychain
     func retrieve(service: String, account: String) -> Data? {
-        // Create query
-        print("retrieving data from keychain, service: \(service), account: \(account)")
+        print("Retrieving data from keychain, service: \(service), account: \(account)")
         let query: [String: Any] = [
             kSecClass as String       : kSecClassGenericPassword,
             kSecAttrService as String : service,
@@ -48,9 +47,12 @@ class KeychainHelper {
         let status = SecItemCopyMatching(query as CFDictionary, &dataTypeRef)
         
         if status == errSecSuccess, let data = dataTypeRef as? Data {
+            print("✅ Successfully retrieved data from keychain")
             return data
+        } else {
+            print("❌ Failed to retrieve from keychain, error code: \(status), description: \(SecCopyErrorMessageString(status, nil) as String? ?? "Unknown error")")
+            return nil
         }
-        return nil
     }
     
     /// Delete data from Keychain
