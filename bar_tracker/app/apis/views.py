@@ -211,7 +211,6 @@ def is_user_near_bar(request):
 
     profile, created = UserProfile.objects.get_or_create(user=user)
     near_bar_id = request.data.get("near_bar_id")
-    print(user)
     if str(user) == "9D0F599A-80B5-46F1-B92E-EB1AE3028665":
         user_name = "Alison"
     elif str(user) == "807980CC-BA68-43FB-A071-6FD980AF88C8":
