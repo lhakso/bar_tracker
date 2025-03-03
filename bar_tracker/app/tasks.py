@@ -9,3 +9,6 @@ def clear_reports():
     message = f"Deleted {deleted_count} reports."
     logger.info(message)
     return message
+
+if __name__ == "__main__":
+    clear_reports()
