@@ -213,10 +213,7 @@ def is_user_near_bar(request):
 
     near_bar_id = request.data.get("near_bar_id")
 
-    if near_bar_id is not None and near_bar_id != "null":
-        profile.is_near_bar = int(near_bar_id)
-    else:
-        profile.is_near_bar = -1
+    profile.is_near_bar = int(near_bar_id)
 
     profile.last_updated_location = now()
     profile.save()

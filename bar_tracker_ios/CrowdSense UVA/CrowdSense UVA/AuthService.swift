@@ -100,9 +100,6 @@ class AuthService {
         return nil
     }
     
-    // MARK: - Authenticated Requests
-
-    /// Example: Make an authenticated request.
     func makeAuthenticatedRequest(
         endpoint: String,
         method: String = "GET",
