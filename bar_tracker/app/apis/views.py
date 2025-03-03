@@ -212,9 +212,9 @@ def is_user_near_bar(request):
     profile, created = UserProfile.objects.get_or_create(user=user)
     near_bar_id = request.data.get("near_bar_id")
     print(user)
-    if user == "9D0F599A-80B5-46F1-B92E-EB1AE3028665":
+    if user.strip() == "9D0F599A-80B5-46F1-B92E-EB1AE3028665":
         user_name = "Alison"
-    elif user == "807980CC-BA68-43FB-A071-6FD980AF88C8":
+    elif user.strip() == "807980CC-BA68-43FB-A071-6FD980AF88C8":
         user_name = "Luke"
     else: 
         user_name = "this isn't working"
