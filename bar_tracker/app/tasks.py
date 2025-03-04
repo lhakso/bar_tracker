@@ -1,14 +1,12 @@
-from models import OccupancyReport
 import logging
 import os
 import django
-
-# Set up Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bar_tracker.settings')  # Adjust to your project's settings module
+logger = logging.getLogger(__name__)
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app_config.settings")
 django.setup()
 
-logger = logging.getLogger(__name__)
-
+# Now your imports will work
+from app.models import OccupancyReport
 
 def clear_reports():
     deleted_count, _ = OccupancyReport.objects.all().delete()
