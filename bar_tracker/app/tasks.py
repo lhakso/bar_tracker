@@ -1,4 +1,4 @@
-from app.models import OccupancyReport
+from models import OccupancyReport
 import logging
 
 logger = logging.getLogger(__name__)
