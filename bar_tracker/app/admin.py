@@ -23,6 +23,7 @@ class BarAdmin(admin.ModelAdmin):
     list_display = (
         "name",
         "is_active",
+        "users_nearby",
     )  # Show name and active status in the admin panel
     list_filter = ("is_active",)  # Filter bars by active/inactive status
     actions = ["activate_bars", "deactivate_bars"]  # Add bulk actions
