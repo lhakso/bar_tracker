@@ -246,7 +246,6 @@ def is_user_near_bar(request):
         except (ValueError, Bar.DoesNotExist):
             # Handle invalid bar ID
             profile.is_near_bar = -1
-            logger.error(f"Previous bar with ID {old_near_bar_id} does not exist for user {user_name}, or ValueError")
 
     profile.last_updated_location = now()
     profile.save()
