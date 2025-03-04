@@ -23,6 +23,7 @@ from app.utils import (
     verify_cooldown,
     calculate_displayed_values,
     get_user_from_request,
+    update_total_users_near_bar
 )
 import logging
 
@@ -207,24 +208,29 @@ def update_user_email(request):
 @permission_classes([ValidTokenPermission])
 @authentication_classes([])
 def is_user_near_bar(request):
+
     user, error_response = get_user_from_request(request)
 
     profile, created = UserProfile.objects.get_or_create(user=user)
     near_bar_id = request.data.get("near_bar_id")
+
     if str(user) == "9D0F599A-80B5-46F1-B92E-EB1AE3028665":
         user_name = "Alison"
     elif str(user) == "807980CC-BA68-43FB-A071-6FD980AF88C8":
         user_name = "Luke"
     else: 
-        user_name = "this isn't working"
+        user_name = "Other user"
+
     print(f"NEAR BAR ID: {near_bar_id}, USER: {user_name}")
     if near_bar_id is not None:
         profile.is_near_bar = int(near_bar_id)
+
     else:
         profile.is_near_bar = -1
 
     profile.last_updated_location = now()
     profile.save()
+    update_total_users_near_bar()
     return Response(
         {"message": "is_near_bar updated successfully"}, status=status.HTTP_200_OK
     )

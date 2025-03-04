@@ -3,10 +3,12 @@ from django.utils.timezone import now
 from app.models import UserProfile, OccupancyReport, Bar
 from geopy.distance import geodesic
 import math
+from django.shortcuts import get_object_or_404
 from typing import Tuple
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework import status
+from django.db.models import Count
 
 
 def calculate_displayed_values(bar: Bar) -> Tuple[int, int]:
@@ -107,3 +109,16 @@ def get_user_from_request(request):
         return None, Response(
             {"error": "User not found for this token"}, status=status.HTTP_404_NOT_FOUND
         )
+
+def update_total_users_near_bar():
+    active_bars = Bar.objects.filter(is_active=True)
+
+    bar_counts = UserProfile.objects.exclude(is_near_bar=-1)\
+                .values('is_near_bar')\
+                .annotate(user_count=Count('id'))
+    
+    count_bars_by_id = {item['is_near_bar']: item['user_count'] for item in bar_counts}
+
+    for bar in active_bars:
+        bar.users_nearby = count_bars_by_id.get(bar.id, 0)
+        bar.save()
