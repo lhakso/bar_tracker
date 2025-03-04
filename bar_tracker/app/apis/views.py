@@ -23,7 +23,6 @@ from app.utils import (
     verify_cooldown,
     calculate_displayed_values,
     get_user_from_request,
-    update_total_users_near_bar
 )
 import logging
 
