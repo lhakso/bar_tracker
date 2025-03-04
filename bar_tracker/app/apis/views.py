@@ -216,7 +216,7 @@ def is_user_near_bar(request):
 
     if str(user) == "9D0F599A-80B5-46F1-B92E-EB1AE3028665":
         user_name = "Alison"
-    elif str(user) == "807980CC-BA68-43FB-A071-6FD980AF88C8":
+    elif str(user) == "138A88B8-0714-427F-881E-86680EAE5B55":
         user_name = "Luke"
     else: 
         user_name = "Other user"
