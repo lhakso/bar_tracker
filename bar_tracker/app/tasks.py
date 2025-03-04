@@ -1,5 +1,11 @@
 from models import OccupancyReport
 import logging
+import os
+import django
+
+# Set up Django
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'bar_tracker.settings')  # Adjust to your project's settings module
+django.setup()
 
 logger = logging.getLogger(__name__)
 
