@@ -1,12 +1,10 @@
-import logging
 import os
 import django
-logger = logging.getLogger(__name__)
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "app_config.settings")
 django.setup()
-
-# Now your imports will work
+import logging
 from app.models import OccupancyReport
+logger = logging.getLogger(__name__)
 
 def clear_reports():
     deleted_count, _ = OccupancyReport.objects.all().delete()
