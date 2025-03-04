@@ -213,6 +213,7 @@ def is_user_near_bar(request):
 
     profile, created = UserProfile.objects.get_or_create(user=user)
     near_bar_id = request.data.get("near_bar_id")
+    old_near_bar_id = profile.is_near_bar
 
     if str(user) == "9D0F599A-80B5-46F1-B92E-EB1AE3028665":
         user_name = "Alison"
@@ -222,15 +223,34 @@ def is_user_near_bar(request):
         user_name = "Other user"
 
     print(f"NEAR BAR ID: {near_bar_id}, USER: {user_name}")
-    if near_bar_id is not None:
-        profile.is_near_bar = int(near_bar_id)
+    # Handle old bar count decrease if user was at a bar
+    if old_near_bar_id != -1:
+        try:
+            old_bar = Bar.objects.get(id=old_near_bar_id)
+            if old_bar.users_nearby > 0:
+                old_bar.users_nearby -= 1
+                old_bar.save()
+        except Bar.DoesNotExist:
+            logger.error(f"Previous bar with ID {old_near_bar_id} does not exist for user {user_name}")
 
-    else:
-        profile.is_near_bar = -1
+    
+    # Update user's location
+    if near_bar_id is not None:
+        try:
+            new_bar_id = int(near_bar_id)
+            profile.is_near_bar = new_bar_id
+            
+            # Increase count for new bar
+            new_bar = Bar.objects.get(id=new_bar_id)
+            new_bar.users_nearby += 1
+            new_bar.save()
+        except (ValueError, Bar.DoesNotExist):
+            # Handle invalid bar ID
+            profile.is_near_bar = -1
+            logger.error(f"Previous bar with ID {old_near_bar_id} does not exist for user {user_name}, or ValueError")
 
     profile.last_updated_location = now()
     profile.save()
-    update_total_users_near_bar()
     return Response(
         {"message": "is_near_bar updated successfully"}, status=status.HTTP_200_OK
     )
