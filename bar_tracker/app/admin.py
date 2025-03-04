@@ -18,7 +18,7 @@ class UserProfileAdmin(admin.ModelAdmin):
     )
     search_fields = ("user__username",)
 
-
+@admin.register(Bar)
 class BarAdmin(admin.ModelAdmin):
     list_display = (
         "name",
