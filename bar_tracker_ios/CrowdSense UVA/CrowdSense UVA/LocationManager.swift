@@ -7,9 +7,9 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var lastLocation: CLLocation?
     @Published var userIsNearBar: Int? = nil
     private var isUsingPreciseLocationUpdates = false
-    
+    var authorizationCallback: ((CLAuthorizationStatus) -> Void)?
     // Define the rough boundary of the bar district
-    private let barAreaCenter = CLLocation(latitude: 38.03519157104836, longitude: -78.50011168821909) // Adjust to Corner/UVA bar area
+    private let barAreaCenter = CLLocation(latitude: 38.03519157104836, longitude: -78.50011168821909)
     private let barAreaRadius = 0.4 // miles (broad area containing all bars)
     
     private var locationRequestCompletion: ((CLLocation?) -> Void)?
@@ -44,6 +44,10 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         return distanceInMiles <= barAreaRadius
     }
     
+    func getAuthorizationStatus() -> CLAuthorizationStatus {
+        return manager.authorizationStatus
+    }
+    
     // Handle switching between monitoring types
     private func adjustLocationPrecision(for location: CLLocation) {
         let inBarArea = isInBarArea(location)
@@ -65,10 +69,11 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        authorizationCallback?(manager.authorizationStatus)
         switch manager.authorizationStatus {
         case .authorizedWhenInUse:
             print("Granted 'While Using', now requesting 'Always Allow'")
-            manager.requestAlwaysAuthorization()
+            requestAlwaysAuthorization()
         case .authorizedAlways:
             print("Granted Always Allow")
             startLocationServices()
@@ -79,6 +84,9 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         @unknown default:
             break
         }
+    }
+    func requestAlwaysAuthorization() {
+        manager.requestAlwaysAuthorization()
     }
     
     func requestLocation(completion: @escaping (CLLocation?) -> Void) {

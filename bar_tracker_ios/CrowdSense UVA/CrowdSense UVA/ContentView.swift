@@ -10,11 +10,12 @@ import CoreLocation
 
 struct ContentView: View {
     // ViewModel to fetch and manage data
+    @State private var locationAuthStatus: CLAuthorizationStatus = .notDetermined
+    private let locationManager = LocationManager.shared
     @EnvironmentObject var viewModel: BarListViewModel
     @EnvironmentObject var authVM: AuthViewModel
     @State private var expandedBarId: Int? = -1
     @State private var showProfile = false
-    @StateObject private var locationManager = LocationManager()
     private let manager = CLLocationManager()
     
     init() {
@@ -26,13 +27,13 @@ struct ContentView: View {
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
     }
-
+    
     var body: some View {
         ZStack {
             // Background color
             Color(red: 10/255, green: 10/255, blue: 60/255)
                 .ignoresSafeArea()
-
+            
             NavigationStack {
                 BarListView(expandedBarId: $expandedBarId) // Using BarListView directly
                     .navigationBarTitleDisplayMode(.inline) // Ensures consistent title placement
@@ -44,19 +45,39 @@ struct ContentView: View {
                         }
                         ToolbarItem(placement: .navigationBarTrailing) {
                             /*
-                            NavigationLink(destination: ProfileView()) {
-                                Image(systemName: "line.horizontal.3")
-                                    .imageScale(.large)
-                                    .foregroundColor(.white)
-                            }
+                             NavigationLink(destination: ProfileView()) {
+                             Image(systemName: "line.horizontal.3")
+                             .imageScale(.large)
+                             .foregroundColor(.white)
+                             }
                              */
                         }
                     }
             }
-            .onAppear {
-                manager.requestWhenInUseAuthorization()
+            if locationAuthStatus == .authorizedWhenInUse || locationAuthStatus == .denied {
+                LocationPermissionPopup(
+                    onRequestPermission: {
+                        locationManager.requestAlwaysAuthorization()
+                    },
+                    isDenied: locationAuthStatus == .denied
+                )
+                .transition(.slide)
+                .zIndex(100)
             }
             
+        }
+        .onAppear {
+            // Update to set the actual status
+            locationAuthStatus = locationManager.getAuthorizationStatus()
+            
+            locationManager.authorizationCallback = { status in
+                DispatchQueue.main.async {
+                    self.locationAuthStatus = status
+                }
+            }
+        }
+        .onDisappear {
+            locationManager.authorizationCallback = nil
         }
     }
 }
