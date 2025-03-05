@@ -103,7 +103,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         adjustLocationPrecision(for: newLocation)
         
         // Check for token and process bar proximity
-        guard let token = AuthService.shared.getAnonymousToken() else {
+        guard AuthService.shared.getAnonymousToken() != nil else {
             print("WARNING: No valid auth token available for location update")
             return
         }

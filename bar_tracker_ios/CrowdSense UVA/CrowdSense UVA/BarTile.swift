@@ -259,7 +259,7 @@ struct BarTile: View {
         .animation(.linear(duration: 0.25), value: isExpanded)
     }
     
-    // Helper for occupancy color
+    // helper for occupancy color
     private func occupancyColor(for value: Int) -> Color {
         switch value {
         case 0...3: return .green
@@ -269,7 +269,7 @@ struct BarTile: View {
         }
     }
     
-    // Helper for line wait color
+    // helper for line wait color
     private func lineWaitColor(for minutes: Int) -> Color {
         switch minutes {
         case 0...5: return .green
