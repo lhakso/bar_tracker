@@ -5,95 +5,145 @@ struct BarTile: View {
     @EnvironmentObject var locationManager: LocationManager
     let bar: Bar
     let isExpanded: Bool
-    let onExpand: (Int) -> Void // Callback to notify parent about expansion
+    let onExpand: (Int) -> Void // callback to notify parent about expansion
     @ObservedObject var viewModel: BarListViewModel
     var namespace: Namespace.ID
     @State private var occupancy: Double = 5
     @State private var lineWait: Double = 0
     @Binding var expandedBarId: Int?
     
-    
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-
-            // Main bar info
+        VStack(alignment: .leading, spacing: 16) {
+            // main bar info
             Text(bar.name)
-                .font(.title2)
+                .font(.system(size: 22, weight: .bold, design: .rounded))
                 .foregroundColor(.white)
+                .scaleEffect(isExpanded ? 1.18 : 1.0, anchor: .leading)
                 .matchedGeometryEffect(id: "title_\(bar.id)", in: namespace)
 
-            // If not expanded, show the "Submit Report" button
+            // If not expanded, show basic info and "Submit Report" button
             if !isExpanded {
-                HStack {
-                    Text("Occupancy: \(bar.currentOccupancy.map { String($0) } ?? "No Data")")
+                // Status indicators with colored dots
+                HStack(spacing: 12) {
+                    // Occupancy indicator
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(occupancyColor(for: bar.currentOccupancy ?? 0))
+                            .frame(width: 8, height: 8)
+                        
+                        Text("Occupancy: \(bar.currentOccupancy.map { String($0) } ?? "No Data")")
+                            .font(.system(size: 15, weight: .regular, design: .rounded))
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
+                    
                     Spacer()
-                    Text("Line Wait: \(bar.currentLineWait.map { "\($0) mins" } ?? "No Data")")
+                    
+                    // Line wait indicator
+                    HStack(spacing: 6) {
+                        Circle()
+                            .fill(lineWaitColor(for: bar.currentLineWait ?? 0))
+                            .frame(width: 8, height: 8)
+                            
+                        Text("Line Wait: \(bar.currentLineWait.map { "\($0) mins" } ?? "No Data")")
+                            .font(.system(size: 15, weight: .regular, design: .rounded))
+                            .fixedSize(horizontal: true, vertical: false)
+                    }
                 }
-                .foregroundColor(.white.opacity(0.85))
+                .foregroundColor(.white.opacity(0.9))
 
                 Button(action: {
-                    withAnimation {
+                    withAnimation(.linear(duration: 0.25)) {
                         onExpand(bar.id)
                     }
                 }) {
                     Text("Submit Report")
-                        .padding()
+                        .font(.system(size: 16, weight: .medium, design: .rounded))
+                        .padding(.vertical, 12)
+                        .padding(.horizontal, 20)
                         .frame(maxWidth: .infinity)
-                        .background(Color.blue)
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [
+                                    Color.blue.opacity(0.8),
+                                    Color.blue
+                                ]),
+                                startPoint: .top,
+                                endPoint: .bottom
+                            )
+                        )
                         .foregroundColor(.white)
-                        .cornerRadius(10)
+                        .cornerRadius(16)
+                        .shadow(color: Color.blue.opacity(0.3), radius: 8, x: 0, y: 4)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16)
+                                .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                        )
                 }
+                .buttonStyle(ScaleButtonStyle())
+                .padding(.top, 4)
             }
-
             // If expanded, show the sliders + "Submit" button
             else {
-                VStack {
-                    Text("Occupancy")
-                        .foregroundColor(.white)
-                        .matchedGeometryEffect(id: "occupancy_title_\(bar.id)", in: namespace)
-                    HStack {
-                        Text("Dead")
-                            .foregroundColor(.white)
-                            .padding(.horizontal, -20)
+                VStack(spacing: 20) {
+                    // Occupancy section
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Occupancy")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.white.opacity(0.9))
+                        
+                        HStack {
+                            Text("Dead")
+                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .foregroundColor(.white.opacity(0.7))
+                                .padding(.horizontal, -16)
 
-                        LabeledSlider(
-                            value: $occupancy,
-                            range: 1...10,
-                            step: 1,
-                            unitString: ""
-                        )
+                            LabeledSlider(
+                                value: $occupancy,
+                                range: 1...10,
+                                step: 1,
+                                unitString: ""
+                            )
+                            .matchedGeometryEffect(id: "occupancy_slider_\(bar.id)", in: namespace)
 
-                        Text("Max")
-                            .foregroundColor(.white)
-                            .padding(.horizontal, -20)
+                            Text("Max")
+                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .foregroundColor(.white.opacity(0.7))
+                                .padding(.horizontal, -16)
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 17)
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 20)
-                    .matchedGeometryEffect(id: "occupancy_slider_\(bar.id)", in: namespace)
-
                     
-                    Text("Line Wait")
-                        .foregroundColor(.white)
-                        .matchedGeometryEffect(id: "linewait_title_\(bar.id)", in: namespace)
-                    HStack {
-                        Text("No wait")
-                            .foregroundColor(.white)
-                            .padding(.horizontal, -20)
+                    // Line Wait section
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("Line Wait")
+                            .font(.system(size: 16, weight: .medium, design: .rounded))
+                            .foregroundColor(.white.opacity(0.9))
+                        
+                        HStack {
+                            Text("No wait")
+                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .foregroundColor(.white.opacity(0.7))
+                                .padding(.horizontal, -16)
 
-                        LabeledSlider(
-                            value: $lineWait,
-                            range: 0...60,
-                            step: 5,
-                            unitString: "mins"
-                        )
+                            LabeledSlider(
+                                value: $lineWait,
+                                range: 0...60,
+                                step: 5,
+                                unitString: "mins"
+                            )
+                            .matchedGeometryEffect(id: "linewait_slider_\(bar.id)", in: namespace)
 
-                        Text("60+ mins")
-                            .foregroundColor(.white)
-                            .padding(.horizontal, -20)
+                            Text("60+ mins")
+                                .font(.system(size: 14, weight: .regular, design: .rounded))
+                                .foregroundColor(.white.opacity(0.7))
+                                .padding(.horizontal, -16)
+                        }
+                        .padding(.horizontal)
+                        .padding(.top, 17)
                     }
-                    .padding(.horizontal)
-                    .padding(.top, 20)
-                    .matchedGeometryEffect(id: "linewait_slider_\(bar.id)", in: namespace)
+                    
+                    // submit button
                     Button(action: {
                         // Print debugging info
                         print("Bar: \(bar.name), Occupancy: \(occupancy), Line Wait: \(lineWait)")
@@ -104,7 +154,9 @@ struct BarTile: View {
                             return
                         }
                         
-                        withAnimation { onExpand(-1) }
+                        withAnimation(.linear(duration: 0.25)) {
+                            onExpand(-1)
+                        }
                         
                         // Check proximity asynchronously
                         if let barLocation = BarLocationDataStore.shared.load()?.first(where: { $0.id == expandedBar.id }) {
@@ -113,7 +165,9 @@ struct BarTile: View {
                                 guard isNear else {
                                     print("User is not near the bar – submission aborted.")
                                     // Collapse the panel with animation even if submission is aborted
-                                    withAnimation { onExpand(-1) }
+                                    withAnimation(.linear(duration: 0.25)) {
+                                        onExpand(-1)
+                                    }
                                     return
                                 }
                                 
@@ -127,44 +181,105 @@ struct BarTile: View {
                                         print("Occupancy submission success: \(success)")
                                     }
                                 )
-                                
-                                // Collapse the panel with animation after submission if needed.
                             }
                         } else {
                             print("No matching BarLocation found for bar id: \(expandedBar.id)")
-                            withAnimation { onExpand(-1) }
+                            withAnimation(.linear(duration: 0.25)) {
+                                onExpand(-1)
+                            }
                         }
-
                     }) {
                         Text("Submit")
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
                             .foregroundColor(.white)
-                            .padding()
-                            .background(Color.green)
-                            .cornerRadius(10)
+                            .padding(.vertical, 12)
+                            .padding(.horizontal, 24)
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [
+                                        Color.green.opacity(0.8),
+                                        Color.green
+                                    ]),
+                                    startPoint: .top,
+                                    endPoint: .bottom
+                                )
+                            )
+                            .cornerRadius(16)
+                            .shadow(color: Color.green.opacity(0.3), radius: 6, x: 0, y: 3)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+                            )
                     }
-                    .padding()
+                    .buttonStyle(ScaleButtonStyle())
+                    .padding(.top, 8)
                     .matchedGeometryEffect(id: "submit_button_\(bar.id)", in: namespace)
                 }
-                .transition(.scale)
+                .transition(.opacity)
             }
         }
-        .padding()
+        .padding(20)
         .frame(maxWidth: .infinity, minHeight: 170)
         .background(
-            LinearGradient(
-                gradient: Gradient(colors: [
-                    Color(red: 40/255, green: 50/255, blue: 100/255),
-                    Color(red: 60/255, green: 70/255, blue: 120/255)
-                ]),
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            ZStack {
+                // Main gradient background
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color(red: 50/255, green: 60/255, blue: 110/255),
+                                Color(red: 40/255, green: 50/255, blue: 90/255)
+                            ]),
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                
+                // Subtle inner glow at the top
+                RoundedRectangle(cornerRadius: 24)
+                    .fill(
+                        LinearGradient(
+                            gradient: Gradient(colors: [
+                                Color.white.opacity(0.1),
+                                Color.clear
+                            ]),
+                            startPoint: .top,
+                            endPoint: .center
+                        )
+                    )
+                    .mask(
+                        RoundedRectangle(cornerRadius: 24)
+                            .stroke(lineWidth: 2)
+                    )
+            }
         )
-        .cornerRadius(20)
-        .shadow(color: .gray.opacity(0.2), radius: 5, x: 0, y: 2)
-        .animation(.easeInOut(duration: 0.3), value: isExpanded)
+        .cornerRadius(24)
+        .shadow(color: Color.black.opacity(0.2), radius: 15, x: 0, y: 8)
+        .shadow(color: Color.blue.opacity(0.15), radius: 5, x: 0, y: 3)
+        .animation(.linear(duration: 0.25), value: isExpanded)
+    }
+    
+    // Helper for occupancy color
+    private func occupancyColor(for value: Int) -> Color {
+        switch value {
+        case 0...3: return .green
+        case 4...6: return .yellow
+        case 7...8: return .orange
+        default: return .red
+        }
+    }
+    
+    // Helper for line wait color
+    private func lineWaitColor(for minutes: Int) -> Color {
+        switch minutes {
+        case 0...5: return .green
+        case 6...15: return .yellow
+        case 16...30: return .orange
+        default: return .red
+        }
     }
 }
+
 struct LabeledSlider: View {
     @Binding var value: Double
     let range: ClosedRange<Double>
@@ -177,6 +292,7 @@ struct LabeledSlider: View {
         ZStack {
             // 1) The main Slider (no padding, so geometry is exact).
             Slider(value: $value, in: range, step: step)
+                .accentColor(.blue)
 
             // 2) GeometryReader to figure out how wide the slider is.
             GeometryReader { geo in
@@ -208,7 +324,7 @@ struct LabeledSlider: View {
         .padding(.horizontal)
     }
     
-    /// Show “60+” if at max, otherwise just integer + optional unit (e.g. "mins").
+    /// Show "60+" if at max, otherwise just integer + optional unit (e.g. "mins").
     private var labelText: String {
         let intValue = Int(value)
         if range.upperBound == 60, intValue == 60 {
@@ -258,13 +374,13 @@ struct CalloutBubble: Shape {
             control: CGPoint(x: w, y: h - arrowSize)
         )
         
-        // 4. Arrow “right” edge
+        // 4. Arrow "right" edge
         path.addLine(to: CGPoint(x: midX + arrowSize, y: h - arrowSize))
         
         // Arrow tip at bottom center
         path.addLine(to: CGPoint(x: midX, y: h))
         
-        // Arrow “left” edge
+        // Arrow "left" edge
         path.addLine(to: CGPoint(x: midX - arrowSize, y: h - arrowSize))
         
         // 5. Bottom-left corner arc (above arrow)
@@ -280,3 +396,5 @@ struct CalloutBubble: Shape {
         return path
     }
 }
+
+// Note: ScaleButtonStyle is already defined in BarListView.swift

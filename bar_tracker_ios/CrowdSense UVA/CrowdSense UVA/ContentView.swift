@@ -22,7 +22,7 @@ struct ContentView: View {
         // Customize Navigation Bar appearance to prevent transparency
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(red: 10/255, green: 10/255, blue: 60/255, alpha: 1) // Lighter navy
+        appearance.backgroundColor = UIColor(red: 15/255, green: 15/255, blue: 40/255, alpha: 1.0)
         appearance.titleTextAttributes = [.foregroundColor: UIColor.white] // White title text
         UINavigationBar.appearance().standardAppearance = appearance
         UINavigationBar.appearance().scrollEdgeAppearance = appearance
@@ -42,15 +42,6 @@ struct ContentView: View {
                             Text("CrowdSense")
                                 .font(.headline)
                                 .foregroundColor(.white)
-                        }
-                        ToolbarItem(placement: .navigationBarTrailing) {
-                            /*
-                             NavigationLink(destination: ProfileView()) {
-                             Image(systemName: "line.horizontal.3")
-                             .imageScale(.large)
-                             .foregroundColor(.white)
-                             }
-                             */
                         }
                     }
             }
