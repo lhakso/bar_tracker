@@ -59,6 +59,7 @@ struct ContentView: View {
         }
         .onAppear {
             // Update to set the actual status
+            locationManager.startLocationServices()
             locationAuthStatus = locationManager.getAuthorizationStatus()
             
             locationManager.authorizationCallback = { status in

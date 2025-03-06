@@ -1,5 +1,6 @@
 import CoreLocation
 import SwiftUI
+import UserNotifications
 
 class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     private let manager = CLLocationManager()
@@ -8,9 +9,10 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     @Published var userIsNearBar: Int? = nil
     private var isUsingPreciseLocationUpdates = false
     var authorizationCallback: ((CLAuthorizationStatus) -> Void)?
+    
     // Define the rough boundary of the bar district
     private let barAreaCenter = CLLocation(latitude: 38.03519157104836, longitude: -78.50011168821909)
-    private let barAreaRadius = 0.4 // miles (broad area containing all bars)
+    private let barAreaRadius = 100.4 // miles (broad area containing all bars)
     
     private var locationRequestCompletion: ((CLLocation?) -> Void)?
     
@@ -19,52 +21,91 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         manager.delegate = self
         manager.desiredAccuracy = kCLLocationAccuracyBest
         manager.requestWhenInUseAuthorization()
-    }
-    
-    func startSignificantLocationMonitoring() {
-        if CLLocationManager.significantLocationChangeMonitoringAvailable() {
-            manager.startMonitoringSignificantLocationChanges()
-            print("Started significant location monitoring")
+        
+        // Request notification permissions for debugging
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+            print("Notification permission granted: \(granted)")
         }
     }
     
     func startLocationServices() {
         // Configure for background updates
         manager.allowsBackgroundLocationUpdates = true
-        manager.pausesLocationUpdatesAutomatically = true
+        manager.pausesLocationUpdatesAutomatically = false
         
-        // Always start with SLC as the base monitoring
-        startSignificantLocationMonitoring()
-        print("Location services configured with SLC baseline monitoring")
+        // Set up and start monitoring the bar district region
+        setupBarRegionMonitoring()
+        
+        sendDebugNotification(message: "Location services started with geofence monitoring")
     }
     
-    // Check if user is in the general bar area
-    private func isInBarArea(_ location: CLLocation) -> Bool {
-        let distanceInMiles = location.distance(from: barAreaCenter) / 1609.34
-        return distanceInMiles <= barAreaRadius
+    // Set up geofence for the bar area
+    private func setupBarRegionMonitoring() {
+        let barRegion = CLCircularRegion(
+            center: barAreaCenter.coordinate,
+            radius: barAreaRadius * 1609.34, // Convert miles to meters
+            identifier: "BarDistrictRegion"
+        )
+        barRegion.notifyOnEntry = true
+        barRegion.notifyOnExit = true
+        
+        // Stop any existing monitoring first
+        for region in manager.monitoredRegions {
+            manager.stopMonitoring(for: region)
+        }
+        
+        manager.startMonitoring(for: barRegion)
+        print("Started monitoring bar region with geofence")
+        
+        // Request current location to check if already in region
+        manager.requestLocation()
     }
     
     func getAuthorizationStatus() -> CLAuthorizationStatus {
         return manager.authorizationStatus
     }
     
-    // Handle switching between monitoring types
-    private func adjustLocationPrecision(for location: CLLocation) {
-        let inBarArea = isInBarArea(location)
+    // For debugging: Send a local notification to verify updates
+    private func sendDebugNotification(message: String) {
+        let content = UNMutableNotificationContent()
+        content.title = "Location Update"
+        content.body = message
+        content.sound = .default
         
-        if inBarArea && !isUsingPreciseLocationUpdates {
-            // Switch to precise updates when entering bar area
+        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
+        UNUserNotificationCenter.current().add(request)
+    }
+    
+    // Check if user is in the general bar area
+    private func checkIfInBarArea(_ location: CLLocation) {
+        let distanceInMiles = location.distance(from: barAreaCenter) / 1609.34
+        let isInArea = distanceInMiles <= barAreaRadius
+        print("📍 Distance to bar area: \(distanceInMiles) miles, threshold: \(barAreaRadius) miles, isInArea: \(isInArea)")
+        
+        // Initial state setup if needed
+        if isInArea && !isUsingPreciseLocationUpdates {
+            print("Already in bar area, starting precise updates")
+            startPreciseUpdates()
+        }
+    }
+    
+    // Start precise location tracking
+    private func startPreciseUpdates() {
+        if !isUsingPreciseLocationUpdates {
             manager.desiredAccuracy = kCLLocationAccuracyBest
             manager.distanceFilter = 10 // meters
             manager.startUpdatingLocation()
             isUsingPreciseLocationUpdates = true
-            print("⚠️ Switched to precise location tracking in bar area")
+            sendDebugNotification(message: "Started precise location tracking")
         }
-        else if !inBarArea && isUsingPreciseLocationUpdates {
-            // Switch back to SLC when leaving bar area
+    }
+    
+    // Stop precise location tracking
+    private func stopPreciseUpdates() {
+        if isUsingPreciseLocationUpdates {
             manager.stopUpdatingLocation()
             isUsingPreciseLocationUpdates = false
-            print("↓ Reverted to SLC outside bar area")
+            sendDebugNotification(message: "Stopped precise location tracking")
         }
     }
     
@@ -77,14 +118,17 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         case .authorizedAlways:
             print("Granted Always Allow")
             startLocationServices()
+            sendDebugNotification(message: "Always permission granted")
         case .denied, .restricted:
             print("Location access denied")
+            sendDebugNotification(message: "Location access denied")
         case .notDetermined:
             print("Location permission not requested yet")
         @unknown default:
             break
         }
     }
+    
     func requestAlwaysAuthorization() {
         manager.requestAlwaysAuthorization()
     }
@@ -94,44 +138,104 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         manager.requestLocation()
     }
     
+    // MARK: - CLLocationManagerDelegate methods
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let newLocation = locations.last else { return }
         lastLocation = newLocation
         print("Location updated: \(newLocation.coordinate.latitude), \(newLocation.coordinate.longitude)")
         
-        // Adjust precision based on location
-        adjustLocationPrecision(for: newLocation)
-        
-        // Check for token and process bar proximity
-        guard AuthService.shared.getAnonymousToken() != nil else {
-            print("WARNING: No valid auth token available for location update")
-            return
+        // Check if in bar area on first location
+        if !isUsingPreciseLocationUpdates {
+            checkIfInBarArea(newLocation)
         }
         
-        if let storedLocations = BarLocationDataStore.shared.load(), !storedLocations.isEmpty {
-            updateProximityToAnyBar(locations: storedLocations) { [weak self] nearBarId in
-                DispatchQueue.main.async {
-                    self?.userIsNearBar = nearBarId
-                    self?.updateUserIsNearBar(nearBarId: nearBarId)
-                }
-                if let barId = nearBarId {
-                    print("User is near bar with id: \(barId)")
-                } else {
-                    print("User is not near any bar.")
-                }
+        // Check for proximity to specific bars only when in bar area with precise updates
+        if isUsingPreciseLocationUpdates {
+            // Check for token and process bar proximity
+            guard AuthService.shared.getAnonymousToken() != nil else {
+                print("WARNING: No valid auth token available for location update")
+                return
             }
-        } else {
-            print("No bar locations available for proximity check.")
+            
+            if let storedLocations = BarLocationDataStore.shared.load(), !storedLocations.isEmpty {
+                updateProximityToAnyBar(locations: storedLocations) { [weak self] nearBarId in
+                    DispatchQueue.main.async {
+                        self?.userIsNearBar = nearBarId
+                        self?.updateUserIsNearBar(nearBarId: nearBarId)
+                        
+                        // Debug notification
+                        if let barId = nearBarId {
+                            self?.sendDebugNotification(message: "Near bar #\(barId)")
+                        }
+                    }
+                    if let barId = nearBarId {
+                        print("User is near bar with id: \(barId)")
+                    } else {
+                        print("User is not near any bar.")
+                    }
+                }
+            } else {
+                print("No bar locations available for proximity check.")
+            }
         }
         
         locationRequestCompletion?(newLocation)
         locationRequestCompletion = nil
     }
     
+    // Handle region events
+    func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
+        if region.identifier == "BarDistrictRegion" {
+            print("🎯 ENTERED BAR DISTRICT REGION")
+            sendDebugNotification(message: "Entered bar district")
+            startPreciseUpdates()
+        }
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
+        if region.identifier == "BarDistrictRegion" {
+            print("↓ EXITED BAR DISTRICT REGION")
+            sendDebugNotification(message: "Left bar district")
+            stopPreciseUpdates()
+            // Clear near bar state when leaving the area
+            DispatchQueue.main.async {
+                self.userIsNearBar = nil
+                self.updateUserIsNearBar(nearBarId: nil)
+            }
+        }
+    }
+    
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Location manager error: \(error.localizedDescription)")
+        sendDebugNotification(message: "Location error: \(error.localizedDescription)")
         locationRequestCompletion?(nil)
         locationRequestCompletion = nil
+    }
+    
+    func ensureRegionMonitoringActive() {
+        // Check if we're already monitoring our region
+        var isMonitoringBarRegion = false
+        for region in manager.monitoredRegions {
+            if region.identifier == "BarDistrictRegion" {
+                isMonitoringBarRegion = true
+                break
+            }
+        }
+        
+        // If not monitoring, set it up
+        if !isMonitoringBarRegion {
+            setupBarRegionMonitoring()
+        }
+        
+        print("Region monitoring status checked and ensured active")
+    }
+
+    // Refresh location state based on current location
+    func refreshLocationState() {
+        // Request current location to evaluate position relative to bar district
+        manager.requestLocation()
+        print("Location state refresh requested")
     }
     
     private func computeProximity(for barLocation: BarLocation, with location: CLLocation, thresholdMiles: Double) -> Bool {
