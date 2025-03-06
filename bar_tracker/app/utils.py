@@ -17,8 +17,8 @@ def calculate_displayed_values(bar: Bar) -> Tuple[int, int]:
     Displayed values use a half life formula.  Weight = 0.5^(Minutes Elapsed / Half-Life in Minutes)
     """
     half_life = 15 # mins
-    now = now()
-    one_hour_ago = now - timedelta(hours=1)
+    current_time = now()
+    one_hour_ago = current_time - timedelta(hours=1)
     reports_weighted = []
     all_weights = []
     
@@ -27,7 +27,7 @@ def calculate_displayed_values(bar: Bar) -> Tuple[int, int]:
     )
     if reports.exists():
         for report in reports:
-            minutes_elapsed = (now - report.timestamp).total_seconds() / 60
+            minutes_elapsed = (current_time - report.timestamp).total_seconds() / 60
             weight = 0.5**(minutes_elapsed / half_life)
             reports_weighted.append((report.occupancy * weight, report.line_wait * weight))
             all_weights.append(weight)
