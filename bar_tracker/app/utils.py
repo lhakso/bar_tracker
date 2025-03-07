@@ -29,7 +29,7 @@ def calculate_displayed_values(bar: Bar) -> Tuple[int, int]:
         for report in reports:
             minutes_elapsed = (current_time - report.timestamp).total_seconds() / 60
             weight = 0.5**(minutes_elapsed / half_life)
-            reports_weighted.append((report.occupancy * weight, report.line_wait * weight))
+            reports_weighted.append((report.occupancy_level * weight, report.line_wait * weight))
             all_weights.append(weight)
 
         total_weight = sum(weight for weight in all_weights)
