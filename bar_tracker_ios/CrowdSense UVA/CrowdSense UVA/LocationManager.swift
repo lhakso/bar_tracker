@@ -7,12 +7,10 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     static let shared = LocationManager()
     @Published var lastLocation: CLLocation?
     @Published var userIsNearBar: Int? = nil
-    private var isUsingPreciseLocationUpdates = false
     var authorizationCallback: ((CLAuthorizationStatus) -> Void)?
     
-    // Define the rough boundary of the bar district
-    private let barAreaCenter = CLLocation(latitude: 38.03519157104836, longitude: -78.50011168821909)
-    private let barAreaRadius = 100.4 // miles (broad area containing all bars)
+    // Constants for geofence settings
+    private let barProximityRadius = 30.0 // meters - radius around each bar to detect proximity
     
     private var locationRequestCompletion: ((CLLocation?) -> Void)?
     
@@ -33,31 +31,46 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         manager.allowsBackgroundLocationUpdates = true
         manager.pausesLocationUpdatesAutomatically = false
         
-        // Set up and start monitoring the bar district region
-        setupBarRegionMonitoring()
+        // Set up individual bar geofences
+        setupBarGeofences()
         
-        sendDebugNotification(message: "Location services started with geofence monitoring")
+        sendDebugNotification(message: "Location services started with bar geofences")
     }
     
-    // Set up geofence for the bar area
-    private func setupBarRegionMonitoring() {
-        let barRegion = CLCircularRegion(
-            center: barAreaCenter.coordinate,
-            radius: barAreaRadius * 1609.34, // Convert miles to meters
-            identifier: "BarDistrictRegion"
-        )
-        barRegion.notifyOnEntry = true
-        barRegion.notifyOnExit = true
+    // Set up geofences for individual bars
+    private func setupBarGeofences() {
+        guard let barLocations = BarLocationDataStore.shared.load(), !barLocations.isEmpty else {
+            print("No bar locations available to set up geofences")
+            return
+        }
         
-        // Stop any existing monitoring first
+        // First, clear any existing geofences
         for region in manager.monitoredRegions {
             manager.stopMonitoring(for: region)
         }
         
-        manager.startMonitoring(for: barRegion)
-        print("Started monitoring bar region with geofence")
+        // Create a geofence for each bar
+        for bar in barLocations {
+            let barCoordinate = CLLocationCoordinate2D(
+                latitude: CLLocationDegrees(bar.latitude),
+                longitude: CLLocationDegrees(bar.longitude)
+            )
+            
+            let barRegion = CLCircularRegion(
+                center: barCoordinate,
+                radius: barProximityRadius, // Use meters directly
+                identifier: "Bar-\(bar.id)"
+            )
+            barRegion.notifyOnEntry = true
+            barRegion.notifyOnExit = true
+            
+            manager.startMonitoring(for: barRegion)
+            print("Started monitoring region for bar #\(bar.id)")
+        }
         
-        // Request current location to check if already in region
+        sendDebugNotification(message: "Set up \(barLocations.count) bar geofences")
+        
+        // Request current location to check if already in any bar region
         manager.requestLocation()
     }
     
@@ -74,39 +87,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         
         let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: nil)
         UNUserNotificationCenter.current().add(request)
-    }
-    
-    // Check if user is in the general bar area
-    private func checkIfInBarArea(_ location: CLLocation) {
-        let distanceInMiles = location.distance(from: barAreaCenter) / 1609.34
-        let isInArea = distanceInMiles <= barAreaRadius
-        print("📍 Distance to bar area: \(distanceInMiles) miles, threshold: \(barAreaRadius) miles, isInArea: \(isInArea)")
-        
-        // Initial state setup if needed
-        if isInArea && !isUsingPreciseLocationUpdates {
-            print("Already in bar area, starting precise updates")
-            startPreciseUpdates()
-        }
-    }
-    
-    // Start precise location tracking
-    private func startPreciseUpdates() {
-        if !isUsingPreciseLocationUpdates {
-            manager.desiredAccuracy = kCLLocationAccuracyBest
-            manager.distanceFilter = 10 // meters
-            manager.startUpdatingLocation()
-            isUsingPreciseLocationUpdates = true
-            sendDebugNotification(message: "Started precise location tracking")
-        }
-    }
-    
-    // Stop precise location tracking
-    private func stopPreciseUpdates() {
-        if isUsingPreciseLocationUpdates {
-            manager.stopUpdatingLocation()
-            isUsingPreciseLocationUpdates = false
-            sendDebugNotification(message: "Stopped precise location tracking")
-        }
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
@@ -134,7 +114,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func requestLocation(completion: @escaping (CLLocation?) -> Void) {
-        self.locationRequestCompletion = completion
+        locationRequestCompletion = completion
         manager.requestLocation()
     }
     
@@ -145,63 +125,91 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         lastLocation = newLocation
         print("Location updated: \(newLocation.coordinate.latitude), \(newLocation.coordinate.longitude)")
         
-        // Check if in bar area on first location
-        if !isUsingPreciseLocationUpdates {
-            checkIfInBarArea(newLocation)
-        }
-        
-        // Check for proximity to specific bars only when in bar area with precise updates
-        if isUsingPreciseLocationUpdates {
-            // Check for token and process bar proximity
-            guard AuthService.shared.getAnonymousToken() != nil else {
-                print("WARNING: No valid auth token available for location update")
-                return
+        // Check if current location is inside any bar region
+        // This is only used when we get a location update (like after setup) to initialize state
+        if let barLocations = BarLocationDataStore.shared.load(), !barLocations.isEmpty {
+            var nearestBarId: Int? = nil
+            var nearestDistance = Double.greatestFiniteMagnitude
+            
+            for bar in barLocations {
+                let barLocation = CLLocation(
+                    latitude: CLLocationDegrees(bar.latitude),
+                    longitude: CLLocationDegrees(bar.longitude)
+                )
+                
+                let distance = newLocation.distance(from: barLocation)
+                if distance <= barProximityRadius && distance < nearestDistance {
+                    nearestDistance = distance
+                    nearestBarId = bar.id
+                }
             }
             
-            if let storedLocations = BarLocationDataStore.shared.load(), !storedLocations.isEmpty {
-                updateProximityToAnyBar(locations: storedLocations) { [weak self] nearBarId in
-                    DispatchQueue.main.async {
-                        self?.userIsNearBar = nearBarId
-                        self?.updateUserIsNearBar(nearBarId: nearBarId)
-                        
-                        // Debug notification
-                        if let barId = nearBarId {
-                            self?.sendDebugNotification(message: "Near bar #\(barId)")
-                        }
-                    }
-                    if let barId = nearBarId {
-                        print("User is near bar with id: \(barId)")
-                    } else {
-                        print("User is not near any bar.")
-                    }
+            // Update if we found a bar we're in
+            if let barId = nearestBarId, userIsNearBar != barId {
+                // Check for token before updating
+                guard AuthService.shared.getAnonymousToken() != nil else {
+                    print("WARNING: No valid auth token available for initial location update")
+                    return
                 }
-            } else {
-                print("No bar locations available for proximity check.")
+                
+                DispatchQueue.main.async {
+                    self.userIsNearBar = barId
+                    self.updateUserIsNearBar(nearBarId: barId)
+                }
+                print("Initial location is near bar #\(barId)")
+                sendDebugNotification(message: "Initial location near bar #\(barId)")
             }
         }
         
+        // Call the completion handler if it exists
         locationRequestCompletion?(newLocation)
         locationRequestCompletion = nil
     }
     
-    // Handle region events
+    // Handle region events for individual bars
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
-        if region.identifier == "BarDistrictRegion" {
-            print("🎯 ENTERED BAR DISTRICT REGION")
-            sendDebugNotification(message: "Entered bar district")
-            startPreciseUpdates()
+        if region.identifier.starts(with: "Bar-") {
+            // Extract bar ID from the region identifier (format: "Bar-{id}")
+            if let barIdString = region.identifier.split(separator: "-").last,
+               let barId = Int(barIdString) {
+                print("🍻 ENTERED BAR #\(barId) REGION")
+                sendDebugNotification(message: "Entered bar #\(barId)")
+                
+                // Check for token before updating
+                guard AuthService.shared.getAnonymousToken() != nil else {
+                    print("WARNING: No valid auth token available for bar region update")
+                    return
+                }
+                
+                // Update the published property and send API update
+                DispatchQueue.main.async {
+                    self.userIsNearBar = barId
+                    self.updateUserIsNearBar(nearBarId: barId)
+                }
+            }
         }
     }
     
     func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
-        if region.identifier == "BarDistrictRegion" {
-            print("↓ EXITED BAR DISTRICT REGION")
-            sendDebugNotification(message: "Left bar district")
-            stopPreciseUpdates()
-            // Clear near bar state when leaving the area
-            DispatchQueue.main.async {
-                self.userIsNearBar = nil
-                self.updateUserIsNearBar(nearBarId: nil)
+        if region.identifier.starts(with: "Bar-") {
+            if let barIdString = region.identifier.split(separator: "-").last,
+               let barId = Int(barIdString) {
+                print("↓ EXITED BAR #\(barId) REGION")
+                sendDebugNotification(message: "Left bar #\(barId)")
+                
+                // Check for token before updating
+                guard AuthService.shared.getAnonymousToken() != nil else {
+                    print("WARNING: No valid auth token available for bar region update")
+                    return
+                }
+                
+                // Only clear if this is the current bar
+                if self.userIsNearBar == barId {
+                    DispatchQueue.main.async {
+                        self.userIsNearBar = nil
+                        self.updateUserIsNearBar(nearBarId: nil)
+                    }
+                }
             }
         }
     }
@@ -214,26 +222,26 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     func ensureRegionMonitoringActive() {
-        // Check if we're already monitoring our region
-        var isMonitoringBarRegion = false
+        // Check if we're already monitoring any bar regions
+        var isMonitoringAnyBar = false
         for region in manager.monitoredRegions {
-            if region.identifier == "BarDistrictRegion" {
-                isMonitoringBarRegion = true
+            if region.identifier.starts(with: "Bar-") {
+                isMonitoringAnyBar = true
                 break
             }
         }
         
-        // If not monitoring, set it up
-        if !isMonitoringBarRegion {
-            setupBarRegionMonitoring()
+        // If not monitoring any bars, set them up
+        if !isMonitoringAnyBar {
+            setupBarGeofences()
         }
         
         print("Region monitoring status checked and ensured active")
     }
-
+    
     // Refresh location state based on current location
     func refreshLocationState() {
-        // Request current location to evaluate position relative to bar district
+        // Request current location to evaluate position relative to bars
         manager.requestLocation()
         print("Location state refresh requested")
     }
@@ -245,8 +253,15 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         return distanceInMiles <= thresholdMiles
     }
     
-   //current threshold miles is 30ft
+    // Maintained for backward compatibility
     func checkAndUpdateUserProximity(barLocation: BarLocation, thresholdMiles: Double = 0.01, completion: @escaping (Bool) -> Void) {
+        // If we're already tracking this bar via geofence, use that
+        if userIsNearBar == barLocation.id {
+            completion(true)
+            return
+        }
+        
+        // Otherwise, use the legacy distance calculation
         if let location = lastLocation {
             let isNear = computeProximity(for: barLocation, with: location, thresholdMiles: thresholdMiles)
             completion(isNear)
@@ -263,24 +278,80 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         }
     }
     
+    // This is maintained for backward compatibility with any submission code
     func checkUserProximityForSubmission(barLocation: BarLocation, thresholdMiles: Double = 0.03, completion: @escaping (Bool) -> Void) {
+        // If we're already tracking this bar via geofence, use that
+        if userIsNearBar == barLocation.id {
+            completion(true)
+            return
+        }
+        
+        // Otherwise calculate distance
         if let location = lastLocation {
-            let isNear = computeProximity(for: barLocation, with: location, thresholdMiles: thresholdMiles)
-            completion(isNear)
+            let barCLLocation = CLLocation(
+                latitude: CLLocationDegrees(barLocation.latitude),
+                longitude: CLLocationDegrees(barLocation.longitude)
+            )
+            let distanceInMiles = location.distance(from: barCLLocation) / 1609.34
+            completion(distanceInMiles <= thresholdMiles)
         } else {
             requestLocation { [weak self] newLocation in
                 guard let self = self, let location = newLocation else {
                     completion(false)
                     return
                 }
-                self.lastLocation = location
-                let isNear = self.computeProximity(for: barLocation, with: location, thresholdMiles: thresholdMiles)
-                completion(isNear)
+                
+                let barCLLocation = CLLocation(
+                    latitude: CLLocationDegrees(barLocation.latitude),
+                    longitude: CLLocationDegrees(barLocation.longitude)
+                )
+                let distanceInMiles = location.distance(from: barCLLocation) / 1609.34
+                completion(distanceInMiles <= thresholdMiles)
             }
         }
     }
     
+    // For updating the server
+    func updateUserIsNearBar(nearBarId: Int?) {
+        var body: [String: Any] = [:]
+        
+        if let barId = nearBarId {
+            body["near_bar_id"] = barId
+            print("Setting near_bar_id to \(barId)")
+        } else {
+            body["near_bar_id"] = -1
+            print("Setting near_bar_id to -1")
+        }
+
+        // RIGHT BEFORE the request is sent
+        print("FINAL REQUEST BODY: \(body)")
+        AuthService.shared.makeAuthenticatedRequest(endpoint: "is_near_bar/", method: "POST", body: body) { data, response, error in
+            if let error = error {
+                print("Error updating near_bar_id: \(error)")
+                return
+            }
+            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
+                print("Successfully updated near_bar_id")
+            } else {
+                print("Failed to update near_bar_id")
+            }
+        }
+    }
+    
+    // Add a method to refresh bar geofences if they change
+    func refreshBarGeofences() {
+        setupBarGeofences()
+    }
+    
+    // Legacy method for backward compatibility
     func updateProximityToAnyBar(locations: [BarLocation], completion: @escaping (Int?) -> Void) {
+        // If we already have a bar from geofencing, return that
+        if let currentBarId = userIsNearBar {
+            completion(currentBarId)
+            return
+        }
+        
+        // Otherwise use the legacy approach
         let group = DispatchGroup()
         var nearBarId: Int? = nil
         
@@ -296,34 +367,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         
         group.notify(queue: .main) {
             completion(nearBarId)
-        }
-    }
-    
-    func updateUserIsNearBar(nearBarId: Int?) {
-        var body: [String: Any] = [:]
-        
-        // If nearBarId is not nil, add it to the body; otherwise, send NSNull()
-        print("nearBarId: \(nearBarId ?? -100)")
-        if let barId = nearBarId {
-            body["near_bar_id"] = barId
-            print("Setting near_bar_id to \(barId)")
-        } else {
-            body["near_bar_id"] = -1
-            print("Setting near_bar_id to -1")
-        }
-
-        // RIGHT BEFORE the request is sent
-        print("FINAL REQUEST BODY: \(body)")
-        AuthService.shared.makeAuthenticatedRequest(endpoint: "/is_near_bar/", method: "POST", body: body) { data, response, error in
-            if let error = error {
-                print("Error updating near_bar_id: \(error)")
-                return
-            }
-            if let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 {
-                print("Successfully updated near_bar_id")
-            } else {
-                print("Failed to update near_bar_id")
-            }
         }
     }
 }
