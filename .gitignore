@@ -15,5 +15,7 @@ bar_tracker/Celery@Macbook-Air.local:
 
 .DS_Store
 
+*/notebooks/
+
 *.xcuserstate
 xcuserdata/

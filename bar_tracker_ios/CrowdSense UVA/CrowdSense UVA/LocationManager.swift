@@ -296,7 +296,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             completion(distanceInMiles <= thresholdMiles)
         } else {
             requestLocation { [weak self] newLocation in
-                guard let self = self, let location = newLocation else {
+                guard let _ = self, let location = newLocation else {
                     completion(false)
                     return
                 }

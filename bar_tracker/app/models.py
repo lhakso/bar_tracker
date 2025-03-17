@@ -36,9 +36,40 @@ class OccupancyReport(models.Model):
         null=True,
         blank=True,
     )
+    temperature = models.IntegerField(blank=True, null=True)
+    weather = models.CharField(blank=True, null=True)
+    sunrise = models.IntegerField(blank=True, null=True)
+    closed_event = models.BooleanField(blank=True, default=False)
+
+    @property
+    def day_of_week(self):
+        return self.timestamp.weekday()
+
+    @property
+    def is_party_night(self):
+        """Returns True if the day is Thursday, Friday, or Saturday"""
+        weekday = self.day_of_week
+        return weekday in [3, 4, 5]
 
     def __str__(self):
         return f"{self.bar.name} - Level {self.occupancy_level} at {self.timestamp}"
+
+class CurrentWeather(models.Model):
+    temperature = models.IntegerField(null=True)
+    weather_condition = models.CharField(null=True)
+    sunrise = models.IntegerField(blank=True, null=True)
+
+    @classmethod
+    def update_weather(cls, current_temp, current_weather, sunset):
+        obj, created = CurrentWeather.objects.update_or_create(
+            id=1,
+            defaults={
+                'temperature': current_temp,
+                'weather_condition': current_weather,
+                'sunset': sunset
+            }
+        )
+        return obj
 
 
 class UserProfile(models.Model):

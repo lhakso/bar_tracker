@@ -1,0 +1,7 @@
+services:
+  # Scheduled cron job for weather updates
+  - type: cron
+    name: weather-update
+    runtime: python
+    schedule: "0 * * * *"  # Every hour
+    startCommand: python manage.py update_weather

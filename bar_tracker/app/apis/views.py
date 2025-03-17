@@ -1,5 +1,5 @@
 from django.shortcuts import get_object_or_404
-from app.models import Bar, OccupancyReport, UserProfile
+from app.models import Bar, OccupancyReport, UserProfile, CurrentWeather
 from django.http import JsonResponse
 from django.utils.timezone import now
 from rest_framework.decorators import api_view
@@ -150,6 +150,10 @@ def submit_occupancy(request):
             user=request.headers.get("Authorization"),
             occupancy_level=int(occupancy_level) if occupancy_level else 0,
             line_wait=int(line_wait) if line_wait else 0,
+            temperature=CurrentWeather.temperature,
+            weather=CurrentWeather.weather,
+            sunset=CurrentWeather.sunset,
+
         )
         # 6) Recalculate displayed values
         displayed_occupancy, displayed_line = calculate_displayed_values(bar)
