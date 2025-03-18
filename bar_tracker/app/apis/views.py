@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
-from app.models import Bar, OccupancyReport, UserProfile, CurrentWeather
+from app.models import Bar, OccupancyReport, UserProfile
+from app.weather_models import CurrentWeather
 from django.http import JsonResponse
 from django.utils.timezone import now
 from rest_framework.decorators import api_view
