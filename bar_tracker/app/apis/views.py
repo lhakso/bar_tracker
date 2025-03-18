@@ -151,9 +151,7 @@ def submit_occupancy(request):
             occupancy_level=int(occupancy_level) if occupancy_level else 0,
             line_wait=int(line_wait) if line_wait else 0,
             temperature=CurrentWeather.temperature,
-            weather=CurrentWeather.weather,
-            sunset=CurrentWeather.sunset,
-
+            weather=CurrentWeather.weather_condition,
         )
         # 6) Recalculate displayed values
         displayed_occupancy, displayed_line = calculate_displayed_values(bar)

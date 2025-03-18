@@ -25,5 +25,4 @@ class Command(BaseCommand):
         
         feels_like_temp = int(data['main']['feels_like'])
         weather = data['weather'][0]['main'].lower()
-        sunset = int(data['sys']['sunset'])
         CurrentWeather.update_weather(current_temp=feels_like_temp, current_weather=weather, sunset=sunset)

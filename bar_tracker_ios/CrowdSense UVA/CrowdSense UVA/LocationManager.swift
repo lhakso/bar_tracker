@@ -10,7 +10,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     var authorizationCallback: ((CLAuthorizationStatus) -> Void)?
     
     // Constants for geofence settings
-    private let barProximityRadius = 30.0 // meters - radius around each bar to detect proximity
+    private let barProximityRadius = 20.0 // meters - radius around each bar to detect proximity
     
     private var locationRequestCompletion: ((CLLocation?) -> Void)?
     
@@ -33,8 +33,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         
         // Set up individual bar geofences
         setupBarGeofences()
-        
-        sendDebugNotification(message: "Location services started with bar geofences")
     }
     
     // Set up geofences for individual bars
@@ -67,9 +65,6 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
             manager.startMonitoring(for: barRegion)
             print("Started monitoring region for bar #\(bar.id)")
         }
-        
-        sendDebugNotification(message: "Set up \(barLocations.count) bar geofences")
-        
         // Request current location to check if already in any bar region
         manager.requestLocation()
     }
@@ -79,7 +74,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     }
     
     // For debugging: Send a local notification to verify updates
-    private func sendDebugNotification(message: String) {
+    private func sendNotification(message: String) {
         let content = UNMutableNotificationContent()
         content.title = "Location Update"
         content.body = message
@@ -98,10 +93,8 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
         case .authorizedAlways:
             print("Granted Always Allow")
             startLocationServices()
-            sendDebugNotification(message: "Always permission granted")
         case .denied, .restricted:
             print("Location access denied")
-            sendDebugNotification(message: "Location access denied")
         case .notDetermined:
             print("Location permission not requested yet")
         @unknown default:
@@ -157,7 +150,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     self.updateUserIsNearBar(nearBarId: barId)
                 }
                 print("Initial location is near bar #\(barId)")
-                sendDebugNotification(message: "Initial location near bar #\(barId)")
+                sendNotification(message: "Initial location near bar #\(barId)")
             }
         }
         
@@ -170,10 +163,12 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didEnterRegion region: CLRegion) {
         if region.identifier.starts(with: "Bar-") {
             // Extract bar ID from the region identifier (format: "Bar-{id}")
+            
             if let barIdString = region.identifier.split(separator: "-").last,
                let barId = Int(barIdString) {
                 print("🍻 ENTERED BAR #\(barId) REGION")
-                sendDebugNotification(message: "Entered bar #\(barId)")
+                let barName = getBar(withId: barId)
+                sendNotification(message: "Entered \(barName ?? "unknown bar") leave a report!")
                 
                 // Check for token before updating
                 guard AuthService.shared.getAnonymousToken() != nil else {
@@ -193,9 +188,10 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     func locationManager(_ manager: CLLocationManager, didExitRegion region: CLRegion) {
         if region.identifier.starts(with: "Bar-") {
             if let barIdString = region.identifier.split(separator: "-").last,
-               let barId = Int(barIdString) {
-                print("↓ EXITED BAR #\(barId) REGION")
-                sendDebugNotification(message: "Left bar #\(barId)")
+               let barId = Int(barIdString){
+                let barName = getBar(withId: barId)
+                print("↓ EXITED BAR #\(barName ?? "unknown bar") REGION")
+                sendNotification(message: "Left bar #\(barId)")
                 
                 // Check for token before updating
                 guard AuthService.shared.getAnonymousToken() != nil else {
@@ -216,7 +212,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     
     func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
         print("Location manager error: \(error.localizedDescription)")
-        sendDebugNotification(message: "Location error: \(error.localizedDescription)")
+        sendNotification(message: "Location error: \(error.localizedDescription)")
         locationRequestCompletion?(nil)
         locationRequestCompletion = nil
     }

@@ -2,6 +2,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.timezone import now
 from django.db import models
+from weather_models import CurrentWeather
 from django.contrib.auth.models import User
 
 
@@ -21,7 +22,7 @@ class Bar(models.Model):
     def __str__(self):
         return self.name
 
-
+    
 class OccupancyReport(models.Model):
     bar = models.ForeignKey(Bar, on_delete=models.CASCADE, related_name="reports")
     # user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reports")
@@ -53,24 +54,6 @@ class OccupancyReport(models.Model):
 
     def __str__(self):
         return f"{self.bar.name} - Level {self.occupancy_level} at {self.timestamp}"
-
-class CurrentWeather(models.Model):
-    temperature = models.IntegerField(null=True)
-    weather_condition = models.CharField(null=True)
-    sunrise = models.IntegerField(blank=True, null=True)
-
-    @classmethod
-    def update_weather(cls, current_temp, current_weather, sunset):
-        obj, created = CurrentWeather.objects.update_or_create(
-            id=1,
-            defaults={
-                'temperature': current_temp,
-                'weather_condition': current_weather,
-                'sunset': sunset
-            }
-        )
-        return obj
-
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")

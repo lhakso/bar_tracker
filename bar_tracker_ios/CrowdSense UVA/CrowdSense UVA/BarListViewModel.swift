@@ -26,6 +26,7 @@ class BarListViewModel: ObservableObject {
                     let newBarLocations = self.bars.map { bar in
                         BarLocation(id: bar.id, latitude: Float(bar.latitude), longitude: Float(bar.longitude))
                     }
+                    populateBarsNameDict(with: self.bars)
                     BarLocationDataStore.shared.save(locations: newBarLocations)
                 }
             } catch {
@@ -62,9 +63,9 @@ struct Location: Decodable {
 }
 
 // Bar structure to store bar data
-struct Bar: Identifiable, Decodable {
-    let id: Int
-    let name: String
+public struct Bar: Identifiable, Decodable {
+    public let id: Int
+    public let name: String
     let currentOccupancy: Int?
     let currentLineWait: Int?
     let isActive: Bool
@@ -80,4 +81,16 @@ struct Bar: Identifiable, Decodable {
         case latitude = "latitude"
         case longitude = "longitude"
     }
+}
+// Create a public dictionary for ID-based lookups
+public var barDictionary: [Int: String] = [:]
+
+// Function to populate the dictionary with bars
+public func populateBarsNameDict(with bars: [Bar]) {
+    barDictionary = Dictionary(uniqueKeysWithValues: bars.map { ($0.id, $0.name) })
+}
+
+// Function to lookup a bar by ID
+public func getBar(withId id: Int) -> String? {
+    return barDictionary[id]
 }
