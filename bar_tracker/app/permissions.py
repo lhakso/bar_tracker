@@ -15,13 +15,6 @@ class ValidTokenPermission(BasePermission):
             return False
             
         print(f"Raw Authorization header: {token[:15]}...")
-        
-        # Remove the "Token " prefix if present.
-        if token.startswith("Token "):
-            token = token[6:]
-            print(f"Token prefix removed, now: {token[:15]}...")
-        else:
-            print(f"No 'Token ' prefix found in header")
             
         try:
             print(f"Attempting to validate token as UUID: {token[:15]}...")

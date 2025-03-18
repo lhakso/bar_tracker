@@ -1,5 +1,4 @@
 from django.core.management.base import BaseCommand
-import time
 import requests
 from models import CurrentWeather
 from decouple import config
@@ -12,7 +11,7 @@ class Command(BaseCommand):
 
         api_key = config("OPEN_WEATHER_API_KEY")
         city = "Charlottesville,US"
-        
+
         # Make API request to OpenWeatherMap
         base_url = "https://api.openweathermap.org/data/2.5/weather"
         params = {
