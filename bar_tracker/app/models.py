@@ -1,8 +1,7 @@
 from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils.timezone import now
-from django.db import models
-from weather_models import CurrentWeather
+from app.weather_models import CurrentWeather
 from django.contrib.auth.models import User
 
 
