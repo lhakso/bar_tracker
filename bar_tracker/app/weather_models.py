@@ -3,13 +3,13 @@ from django.db import models
 class CurrentWeather(models.Model):
     temperature = models.IntegerField(null=True)
     weather_string = models.CharField(blank=True, null=True)
-    is_clear = models.BooleanField(default=False)
-    is_clouds = models.BooleanField(default=False)
-    is_rain = models.BooleanField(default=False)
-    is_snow = models.BooleanField(default=False)
-    is_thunderstorm = models.BooleanField(default=False)
-    is_drizzle = models.BooleanField(default=False)
-    is_mist = models.BooleanField(default=False)
+    clear = models.BooleanField(default=False)
+    clouds = models.BooleanField(default=False)
+    rain = models.BooleanField(default=False)
+    snow = models.BooleanField(default=False)
+    thunderstorm = models.BooleanField(default=False)
+    drizzle = models.BooleanField(default=False)
+    mist = models.BooleanField(default=False)
 
     @classmethod
     def update_weather(cls, current_temp, current_weather):
@@ -38,4 +38,5 @@ class CurrentWeather(models.Model):
             id=1,
             defaults=update_values
         )
+
         return obj
