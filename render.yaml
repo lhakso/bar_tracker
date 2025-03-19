@@ -4,7 +4,7 @@ services:
     name: weather-update
     runtime: python
     schedule: "0 * * * *"  # Every hour
-    startCommand: cd bar_tracker_project/bar_tracker && python manage.py update_weather
+    startCommand: cd bar_tracker && python manage.py update_weather
 
     # Exported from Render on 2025-03-19T14:38:11Z
 
