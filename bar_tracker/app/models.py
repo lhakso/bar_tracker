@@ -38,7 +38,6 @@ class OccupancyReport(models.Model):
     )
     temperature = models.IntegerField(blank=True, null=True)
     weather = models.CharField(blank=True, null=True)
-    sunrise = models.IntegerField(blank=True, null=True)
     closed_event = models.BooleanField(blank=True, default=False)
 
     @property
