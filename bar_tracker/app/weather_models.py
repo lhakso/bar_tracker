@@ -2,6 +2,7 @@ from django.db import models
 
 class CurrentWeather(models.Model):
     temperature = models.IntegerField(null=True)
+    weather_string = models.CharField(blank=True, null=True)
     is_clear = models.BooleanField(default=False)
     is_clouds = models.BooleanField(default=False)
     is_rain = models.BooleanField(default=False)
@@ -15,6 +16,7 @@ class CurrentWeather(models.Model):
 
         update_values = {
             'temperature': current_temp,
+            'weather_string': current_weather,
             'clear': False,
             'clouds': False, 
             'rain': False,
