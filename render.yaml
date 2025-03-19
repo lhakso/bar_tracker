@@ -4,7 +4,7 @@ services:
     name: weather-update
     runtime: python
     schedule: "0 * * * *"  # Every hour
-    workDir: /opt/render/project/srct/bar_tracker/manage.py
+    workDir: /opt/render/project/src/bar_tracker_project/bar_tracker/manage.py
     startCommand: python manage.py update_weather
 
     # Exported from Render on 2025-03-19T14:38:11Z
