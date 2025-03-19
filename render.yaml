@@ -6,7 +6,7 @@ services:
     schedule: "0 * * * *"  # Every hour
     envVars:
       - key: DATABASE_URL
-        value: postgresql://crowdsense_db_user:sZFck3knY6XsAOswPOL9WtCKFGl6IRGX@dpg-cuco8kd2ng1s73b6ngq0-a.virginia-postgres.render.com/crowdsense_db
+        sync: false
       - key: DJANGO_SETTINGS_MODULE
         value: app_config.settings
     buildCommand: cd bar_tracker && pip install -r requirements.txt
