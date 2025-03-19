@@ -8,7 +8,7 @@ services:
     - key: OPEN_WEATHER_API_KEY
       sync: false
     - key: DJANGO_SETTINGS_MODULE
-      sync: false
+      value: postgresql://crowdsense_db_user:sZFck3knY6XsAOswPOL9WtCKFGl6IRGX@dpg-cuco8kd2ng1s73b6ngq0-a/crowdsense_db
     - key: PYTHONPATH
       sync: false
     - key: DATABASE_URL
