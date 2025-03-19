@@ -146,13 +146,14 @@ def submit_occupancy(request):
             )"""
 
         # 5) Create the OccupancyReport
+        weather_data = CurrentWeather.objects.get(id=1) 
         report = OccupancyReport.objects.create(
             bar=bar,
             user=request.headers.get("Authorization"),
             occupancy_level=int(occupancy_level) if occupancy_level else 0,
             line_wait=int(line_wait) if line_wait else 0,
-            temperature=CurrentWeather.objects.get('temperature'),
-            weather=CurrentWeather.objects.get('weather_string'),
+            temperature=weather_data.temperature,
+            weather=weather_data.weather_string,
         )
         # 6) Recalculate displayed values
         displayed_occupancy, displayed_line = calculate_displayed_values(bar)
