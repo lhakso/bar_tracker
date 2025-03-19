@@ -168,7 +168,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                let barId = Int(barIdString) {
                 print("🍻 ENTERED BAR #\(barId) REGION")
                 let barName = getBar(withId: barId)
-                sendNotification(message: "Entered \(barName ?? "unknown bar") leave a report!")
+                sendNotification(message: "How's \(barName ?? "unknown bar")? Leave a report!")
                 
                 // Check for token before updating
                 guard AuthService.shared.getAnonymousToken() != nil else {
@@ -191,7 +191,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                let barId = Int(barIdString){
                 let barName = getBar(withId: barId)
                 print("↓ EXITED BAR #\(barName ?? "unknown bar") REGION")
-                sendNotification(message: "Left bar #\(barId)")
+                sendNotification(message: "Left bar #\(barName ?? "unknown bar")")
                 
                 // Check for token before updating
                 guard AuthService.shared.getAnonymousToken() != nil else {
