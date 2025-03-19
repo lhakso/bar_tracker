@@ -9,32 +9,32 @@ services:
       fromService:
         type: web
         name: CrowdSense
-      envVarKey: OPEN_WEATHER_API_KEY 
+        envVarKey: OPEN_WEATHER_API_KEY 
     - key: DJANGO_SETTINGS_MODULE
       fromService:
         type: web
         name: CrowdSense
-      envVarKey: DJANGO_SETTINGS_MODULE
+        envVarKey: DJANGO_SETTINGS_MODULE
     - key: PYTHONPATH
       fromService:
         type: web
         name: CrowdSense
-      envVarKey: PYTHONPATH 
+        envVarKey: PYTHONPATH 
     - key: DATABASE_URL
       fromService:
         type: web
         name: CrowdSense
-      envVarKey: DATABASE_URL
+        envVarKey: DATABASE_URL
     - key: DEBUG
       fromService:
         type: web
         name: CrowdSense
-      envVarKey: DEBUG
+        envVarKey: DEBUG
     - key: SECRET_KEY
       fromService:
         type: web
         name: CrowdSense
-      envVarKey: SECRET_KEY
+        envVarKey: SECRET_KEY
     region: virginia
     buildCommand: cd bar_tracker && pip install -r requirements.txt
     startCommand: cd bar_tracker && python manage.py update_weather
