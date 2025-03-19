@@ -5,21 +5,10 @@ services:
     runtime: python
     schedule: "0 * * * *"  # Every hour
     envVars:
-    - key: OPEN_WEATHER_API_KEY
-      sync: false
-    - key: DJANGO_SETTINGS_MODULE
-      sync: false
-    - key: PYTHONPATH
-      sync: false
-    - key: DATABASE_URL
-      value: postgresql://crowdsense_db_user:sZFck3knY6XsAOswPOL9WtCKFGl6IRGX@dpg-cuco8kd2ng1s73b6ngq0-a.virginia-postgres.render.com/crowdsense_db
-    - key: CORS_ALLOW_ALL_ORIGINS
-      sync: false
-    - key: DEBUG
-      sync: false
-    - key: SECRET_KEY
-      sync: false
-    region: virginia
+      - key: DATABASE_URL
+        value: postgresql://crowdsense_db_user:sZFck3knY6XsAOswPOL9WtCKFGl6IRGX@dpg-cuco8kd2ng1s73b6ngq0-a.virginia-postgres.render.com/crowdsense_db
+      - key: DJANGO_SETTINGS_MODULE
+        value: app_config.settings
     buildCommand: cd bar_tracker && pip install -r requirements.txt
     startCommand: cd bar_tracker && python manage.py update_weather
 
