@@ -1,6 +1,6 @@
 from django.core.management.base import BaseCommand
 import requests
-from models import CurrentWeather
+from app.weather_models import CurrentWeather
 from decouple import config
 
 class Command(BaseCommand):
