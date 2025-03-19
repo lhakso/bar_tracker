@@ -6,35 +6,19 @@ services:
     schedule: "0 * * * *"  # Every hour
     envVars:
     - key: OPEN_WEATHER_API_KEY
-      fromService:
-        type: web
-        name: CrowdSense
-        envVarKey: OPEN_WEATHER_API_KEY 
+      sync: false
     - key: DJANGO_SETTINGS_MODULE
-      fromService:
-        type: web
-        name: CrowdSense
-        envVarKey: DJANGO_SETTINGS_MODULE
+      sync: false
     - key: PYTHONPATH
-      fromService:
-        type: web
-        name: CrowdSense
-        envVarKey: PYTHONPATH 
+      sync: false
     - key: DATABASE_URL
-      fromService:
-        type: web
-        name: CrowdSense
-        envVarKey: DATABASE_URL
+      sync: false
+    - key: CORS_ALLOW_ALL_ORIGINS
+      sync: false
     - key: DEBUG
-      fromService:
-        type: web
-        name: CrowdSense
-        envVarKey: DEBUG
+      sync: false
     - key: SECRET_KEY
-      fromService:
-        type: web
-        name: CrowdSense
-        envVarKey: SECRET_KEY
+      sync: false
     region: virginia
     buildCommand: cd bar_tracker && pip install -r requirements.txt
     startCommand: cd bar_tracker && python manage.py update_weather
