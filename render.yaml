@@ -12,7 +12,7 @@ services:
     - key: PYTHONPATH
       sync: false
     - key: DATABASE_URL
-      value: postgresql://crowdsense_db_user:sZFck3knY6XsAOswPOL9WtCKFGl6IRGX@dpg-cuco8kd2ng1s73b6ngq0-a/crowdsense_db
+      value: postgresql://crowdsense_db_user:sZFck3knY6XsAOswPOL9WtCKFGl6IRGX@dpg-cuco8kd2ng1s73b6ngq0-a.virginia-postgres.render.com/crowdsense_db
     - key: CORS_ALLOW_ALL_ORIGINS
       sync: false
     - key: DEBUG
