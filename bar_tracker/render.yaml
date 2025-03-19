@@ -5,3 +5,34 @@ services:
     runtime: python
     schedule: "0 * * * *"  # Every hour
     startCommand: python manage.py update_weather
+
+    # Exported from Render on 2025-03-19T14:38:11Z
+
+  - type: web
+    name: CrowdSense
+    runtime: python
+    repo: https://github.com/lhakso/bar_tracker
+    plan: starter
+    envVars:
+    - key: OPEN_WEATHER_API_KEY
+      sync: false
+    - key: DJANGO_SETTINGS_MODULE
+      sync: false
+    - key: PYTHONPATH
+      sync: false
+    - key: DATABASE_URL
+      sync: false
+    - key: CORS_ALLOW_ALL_ORIGINS
+      sync: false
+    - key: CELERY_BROKER_URL
+      sync: false
+    - key: DEBUG
+      sync: false
+    - key: SECRET_KEY
+      sync: false
+    region: virginia
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic
+      --noinput && python manage.py migrate
+    startCommand: gunicorn  app_config.wsgi:application
+    autoDeploy: false
+    rootDir: bar_tracker
