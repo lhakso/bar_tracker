@@ -93,8 +93,8 @@ def get_bars(request):
     bar_data = []
     for bar in bars:
         bar.displayed_current_occupancy, bar.displayed_current_line = (
-                calculate_displayed_values(bar)
-            )
+            calculate_displayed_values(bar)
+        )
         bar_info = {
             "id": bar.id,
             "name": bar.name,
@@ -146,7 +146,7 @@ def submit_occupancy(request):
             )"""
 
         # 5) Create the OccupancyReport
-        weather_data = CurrentWeather.objects.get(id=1) 
+        weather_data = CurrentWeather.objects.get(id=1)
         report = OccupancyReport.objects.create(
             bar=bar,
             user=request.headers.get("Authorization"),
@@ -210,7 +210,7 @@ def update_user_email(request):
 @permission_classes([ValidTokenPermission])
 @authentication_classes([])
 def is_user_near_bar(request):
-
+    print("is_near_bar ran in the backend")
     user, error_response = get_user_from_request(request)
 
     profile, created = UserProfile.objects.get_or_create(user=user)
@@ -221,7 +221,7 @@ def is_user_near_bar(request):
         user_name = "Alison"
     elif str(user) == "138A88B8-0714-427F-881E-86680EAE5B55":
         user_name = "Luke"
-    else: 
+    else:
         user_name = "Other user"
 
     print(f"NEAR BAR ID: {near_bar_id}, USER: {user_name}")
@@ -233,15 +233,16 @@ def is_user_near_bar(request):
                 old_bar.users_nearby -= 1
                 old_bar.save()
         except Bar.DoesNotExist:
-            logger.error(f"Previous bar with ID {old_near_bar_id} does not exist for user {user_name}")
+            logger.error(
+                f"Previous bar with ID {old_near_bar_id} does not exist for user {user_name}"
+            )
 
-    
     # Update user's location
     if near_bar_id is not None:
         try:
             new_bar_id = int(near_bar_id)
             profile.is_near_bar = new_bar_id
-            
+
             # Increase count for new bar
             new_bar = Bar.objects.get(id=new_bar_id)
             new_bar.users_nearby += 1

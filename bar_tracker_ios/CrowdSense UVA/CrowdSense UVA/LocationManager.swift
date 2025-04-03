@@ -10,7 +10,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     var authorizationCallback: ((CLAuthorizationStatus) -> Void)?
     
     // Constants for geofence settings
-    private let barProximityRadius = 20.0 // meters - radius around each bar to detect proximity
+    private let barProximityRadius = 200.0 // meters - radius around each bar to detect proximity
     
     private var locationRequestCompletion: ((CLLocation?) -> Void)?
     
