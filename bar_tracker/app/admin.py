@@ -38,8 +38,7 @@ class BarAdmin(admin.ModelAdmin):
 
 @admin.register(SiteStatistics)
 class SiteStatisticsAdmin(admin.ModelAdmin):
-    list_display = ("total_users", "last_updated")
-    readonly_fields = ("total_users", "last_updated", "bar_statistics")
+    list_display = ("total_users", "last_updated", "bar_statistics")
 
     def has_add_permission(self, request):
         # Prevent creating multiple statistics instances
@@ -48,9 +47,9 @@ class SiteStatisticsAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Prevent deleting the statistics instance
         return False
-        
+
     def bar_statistics(self, obj):
         """Display formatted bar statistics in the admin detail view"""
         return obj.get_formatted_bar_stats()
-    
+
     bar_statistics.short_description = "Users at each bar"
