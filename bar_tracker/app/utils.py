@@ -1,10 +1,10 @@
 from datetime import timedelta
 from django.utils.timezone import now
-from app.models import UserProfile, OccupancyReport, Bar
+from app.models import UserProfile, OccupancyReport, Bar, SiteStatistics
 from geopy.distance import geodesic
 import math
 from django.shortcuts import get_object_or_404
-from typing import Tuple
+from typing import Tuple, Dict, Any
 from django.contrib.auth.models import User
 from rest_framework.response import Response
 from rest_framework import status
@@ -16,27 +16,25 @@ def calculate_displayed_values(bar: Bar) -> Tuple[int, int]:
     Calculate and return displayed values for occupancy and line.
     Displayed values use a half life formula.  Weight = 0.5^(Minutes Elapsed / Half-Life in Minutes)
     """
-    half_life = 15 # mins
+    half_life = 15  # mins
     current_time = now()
     one_hour_ago = current_time - timedelta(hours=1)
     reports_weighted = []
     all_weights = []
-    
-    reports = bar.reports.filter(timestamp__gte=one_hour_ago).order_by(
-        "-timestamp"
-    )
+
+    reports = bar.reports.filter(timestamp__gte=one_hour_ago).order_by("-timestamp")
     if reports.exists():
         for report in reports:
             minutes_elapsed = (current_time - report.timestamp).total_seconds() / 60
-            weight = 0.5**(minutes_elapsed / half_life)
-            reports_weighted.append((report.occupancy_level * weight, report.line_wait * weight))
+            weight = 0.5 ** (minutes_elapsed / half_life)
+            reports_weighted.append(
+                (report.occupancy_level * weight, report.line_wait * weight)
+            )
             all_weights.append(weight)
 
         total_weight = sum(weight for weight in all_weights)
 
-        displayed_occupancy = round(
-            sum(r[0] for r in reports_weighted) / total_weight
-        )
+        displayed_occupancy = round(sum(r[0] for r in reports_weighted) / total_weight)
         displayed_line = round(sum(r[1] for r in reports_weighted) / total_weight)
     else:
         displayed_occupancy = None

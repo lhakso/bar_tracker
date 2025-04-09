@@ -5,6 +5,48 @@ from app.weather_models import CurrentWeather
 from django.contrib.auth.models import User
 
 
+class SiteStatistics(models.Model):
+    total_users = models.IntegerField(default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        verbose_name = "Site Statistics"
+        verbose_name_plural = "Site Statistics"
+    
+    def __str__(self):
+        return f"Site Statistics (Updated: {self.last_updated})"
+    
+    @classmethod
+    def get_instance(cls):
+        """Get or create the singleton instance of SiteStatistics"""
+        stats, created = cls.objects.get_or_create(pk=1)
+        return stats
+    
+    def get_bars_with_users(self):
+        """
+        Get a list of all bars with their names and nearby user counts.
+        Returns a list of dictionaries with bar name and users_nearby.
+        """
+        from django.db.models import F
+        return list(Bar.objects.filter(is_active=True)
+                   .values('name', 'users_nearby')
+                   .order_by('-users_nearby', 'name'))
+    
+    def get_formatted_bar_stats(self):
+        """
+        Get a formatted string representation of all bars and their nearby users.
+        """
+        bars = self.get_bars_with_users()
+        if not bars:
+            return "No active bars found"
+        
+        result = []
+        for bar in bars:
+            result.append(f"{bar['name']}: {bar['users_nearby']} users nearby")
+        
+        return "\n".join(result)
+
+
 class Bar(models.Model):
     name = models.CharField(max_length=100)
     latitude = models.FloatField(null=True, blank=True)
