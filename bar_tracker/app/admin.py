@@ -50,6 +50,6 @@ class SiteStatisticsAdmin(admin.ModelAdmin):
 
     def bar_statistics(self, obj):
         """Display formatted bar statistics in the admin detail view"""
-        return obj.get_formatted_bar_stats().replace("\n", "<br>")
+        return obj.get_formatted_bar_stats()
 
     bar_statistics.short_description = "Users at each bar"
