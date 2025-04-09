@@ -17,5 +17,7 @@ bar_tracker/Celery@Macbook-Air.local:
 
 */notebooks/
 
+bar_tracker/CLAUDE.md
+
 *.xcuserstate
 xcuserdata/

@@ -10,7 +10,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
     var authorizationCallback: ((CLAuthorizationStatus) -> Void)?
     
     // Constants for geofence settings
-    private let barProximityRadius = 200.0 // meters - radius around each bar to detect proximity
+    private let barProximityRadius = 20.0 // meters - radius around each bar to detect proximity
     
     private var locationRequestCompletion: ((CLLocation?) -> Void)?
     
@@ -321,7 +321,7 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
 
         // RIGHT BEFORE the request is sent
         print("FINAL REQUEST BODY: \(body)")
-        AuthService.shared.makeAuthenticatedRequest(endpoint: "is_near_bar/", method: "POST", body: body) { data, response, error in
+        AuthService.shared.makeAuthenticatedRequest(endpoint: "/is_near_bar/", method: "POST", body: body) { data, response, error in
             if let error = error {
                 print("Error updating near_bar_id: \(error)")
                 return
