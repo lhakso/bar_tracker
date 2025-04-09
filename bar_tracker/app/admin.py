@@ -39,6 +39,7 @@ class BarAdmin(admin.ModelAdmin):
 @admin.register(SiteStatistics)
 class SiteStatisticsAdmin(admin.ModelAdmin):
     list_display = ("total_users", "last_updated", "bar_statistics")
+    readonly_fields = ("last_updated", "bar_statistics")
 
     def has_add_permission(self, request):
         # Prevent creating multiple statistics instances
