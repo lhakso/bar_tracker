@@ -150,7 +150,9 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                     self.updateUserIsNearBar(nearBarId: barId)
                 }
                 print("Initial location is near bar #\(barId)")
-                sendNotification(message: "Initial location near bar #\(barId)")
+                if AppDelegate.isDebugMode {
+                    sendNotification(message: "Initial location near bar #\(barId)")
+                }
             }
         }
         
@@ -191,7 +193,9 @@ class LocationManager: NSObject, ObservableObject, CLLocationManagerDelegate {
                let barId = Int(barIdString){
                 let barName = getBar(withId: barId)
                 print("↓ EXITED BAR #\(barName ?? "unknown bar") REGION")
-                sendNotification(message: "Left bar #\(barName ?? "unknown bar")")
+                if AppDelegate.isDebugMode {
+                    sendNotification(message: "Left bar \(barName ?? "unknown bar")")
+                }
                 
                 // Check for token before updating
                 guard AuthService.shared.getAnonymousToken() != nil else {

@@ -5,6 +5,8 @@ import CoreLocation
 import UserNotifications
 
 class AppDelegate: NSObject, UIApplicationDelegate {
+    static var isDebugMode = false
+    
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil) -> Bool {
         // If app was launched from background due to location event
         if launchOptions?[UIApplication.LaunchOptionsKey.location] != nil {
