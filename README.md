@@ -2,78 +2,42 @@
 
 BarTracker is a crowdsourced app that provides real-time information on bar occupancy and wait times. It combines user-generated data and location-based insights to help users decide where to go for the best experience.
 
----
+## About This Project
 
-## Features
+This repository contains the source code for BarTracker, a personal project I developed to solve the problem of unpredictable wait times and overcrowding at bars and venues. The app gives users access to real-time information about popular spots in their area.
 
-- **Crowdsourced Data**: Users can submit occupancy levels and line wait times.
-- **Location-Based Occupancy**: Gets users near specific venues (If location access is allowed)
-- **User-Friendly Interface**: Simple and intuitive design for easy data submission.
+## Key Features
 
----
+- **Crowdsourced Data**: Users can submit occupancy levels and line wait times
+- **Location-Based Insights**: Shows users venues near their location (when location access is allowed)
+- **User-Friendly Interface**: Simple, intuitive design for easy navigation and data submission
 
-## Installation
+## Technical Overview
 
-### Prerequisites
-1. Python 3.x
-2. PostgreSQL
-3. [Redis](https://redis.io/) (for Celery)
-4. Virtual environment tools like `venv`
-## Setup
+BarTracker is built using:
+- Python/Django backend
+- PostgreSQL database
+- Redis/Celery for task management
+- Location-based services
+- Mobile-responsive frontend
 
-1. **Clone the repository:**
-    ```bash
-   git clone https://github.com/lhakso/bar_tracker.git
-   cd bar_tracker
-2. **Set up Python venv**
-    ```bash
-   python3 -m venv bar_tracker_venv
-   source bar_tracker_venv/bin/activate  # On Linux/Mac
-   bar_tracker_venv\Scripts\activate
+This project demonstrates my experience with:
+- Full-stack web development
+- Database design and management
+- Asynchronous task processing
+- Location-based services integration
+- User authentication and data collection
 
+## Project Status
 
-3. **Install dependencies:**
-    ```bash
-    pip install -r requirements.txt
-
-4. **Set up PostgreSQL:**
-- Create a database and user.
-- Configure `.env` with your database credentials.
-
-
-5. **Run migrations:**
-    ```bash
-    python manage.py makemigrations
-    python manage.py migrate
-
-6. **Set up Redis:**
-    Install Redis on your system (instructions for installation).
-
-    Start the Redis server:
-    ```bash
-    redis-server
-
-7. **Set up Celery:**
-    Start the Celery Worker
-    
-    ```bash
-    celery -A bar_tracker worker --loglevel=info
-
-8. **Set up Celery Beat (for periodic tasks):**
-    Start the beat scheduler
-
-    ```bash
-    Set up Celery Beat (for periodic tasks):
-
-9. **Start the development server:**
-    ```bash
-    python manage.py runserver
-
-
-## License
-This project is licensed under the MIT License.
+This is a personal project currently under development. While the code is publicly visible, it's not actively maintained for public use or contributions.
 
 ## Contact
-Name: Luke Hakso   
+
+Name: Luke Hakso  
 Email: luke.c.hakso@gmail.com  
-GitHub: lhakso
+GitHub: [@lhakso](https://github.com/lhakso)
+
+## License
+
+This project is licensed under the MIT License.
